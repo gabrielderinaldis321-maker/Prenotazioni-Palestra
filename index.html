@@ -107,12 +107,15 @@
         }
 
         .status-message {
-            margin-top: 15px;
+            margin-top: 20px;
             font-weight: bold;
             text-align: center;
             font-size: 14px;
-            padding: 10px;
+            padding: 12px;
             border-radius: 4px;
+            border: 1px solid #444;
+            background-color: #2a2a2a;
+            color: #aaaaaa;
         }
     </style>
 </head>
@@ -166,7 +169,7 @@
             </div>
         </form>
 
-        <div id="formStatus" class="status-message" style="display: none;"></div>
+        <div id="formStatus" class="status-message">Benvenuto! Seleziona i campi per procedere.</div>
     </div>
 
     <script>
@@ -199,24 +202,19 @@
                 }
             };
 
-            function mostraStato(messaggio, colore, sfondo) {
-                formStatus.style.display = 'block';
+            function mostraStato(messaggio, coloreTesto, coloreSfondo, coloreBordo) {
                 formStatus.textContent = messaggio;
-                formStatus.style.color = colore;
-                formStatus.style.backgroundColor = sfondo;
-            }
-
-            function nascondiStato() {
-                formStatus.style.display = 'none';
-                formStatus.textContent = '';
+                formStatus.style.color = coloreTesto;
+                formStatus.style.backgroundColor = coloreSfondo;
+                formStatus.style.borderColor = coloreBordo;
             }
 
             function aggiornaGiorni() {
                 const attivita = attivitaSelect.value;
                 giornoSelect.innerHTML = '<option value="">Seleziona giorno</option>';
                 orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
-                nascondiStato();
                 ripristinaCampi();
+                mostraStato("Seleziona giorno e orario per verificare la disponibilità.", "#aaaaaa", "#2a2a2a", "#444");
 
                 if (attivita && orariDisponibili[attivita]) {
                     orariDisponibili[attivita].giorni.forEach(giorno => {
@@ -232,8 +230,8 @@
                 const attivita = attivitaSelect.value;
                 const giorno = giornoSelect.value;
                 orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
-                nascondiStato();
                 ripristinaCampi();
+                mostraStato("Seleziona l'orario per procedere.", "#aaaaaa", "#2a2a2a", "#444");
 
                 if (attivita && giorno && orariDisponibili[attivita]) {
                     orariDisponibili[attivita].orari.forEach(orario => {
@@ -271,18 +269,16 @@
                     const postiOccupati = getPostiOccupati(chiaveSlot);
 
                     if (postiOccupati >= 6) {
-                        mostraStato('⛔ SUPERAMENTO LIMITE MASSIMO: Questo corso è al completo (6/6 posti esauriti).', '#ff6b6b', '#2a1212');
+                        mostraStato('⛔ SUPERAMENTO LIMITE MASSIMO: Questo corso è al completo (6/6 posti esauriti).', '#ff6b6b', '#2a1212', '#a52a2a');
                         nomeInput.disabled = true;
                         cognomeInput.disabled = true;
                         submitBtn.disabled = true;
                         submitBtn.textContent = 'CORSO ESAURITO';
                     } else {
                         const rimanenti = 6 - postiOccupati;
-                        mostraStato(`ℹ️ Posti occupati: ${postiOccupati}/6 (Disponibili: ${rimanenti})`, '#51cf66', '#122618');
+                        mostraStato(`ℹ️ Posti occupati: ${postiOccupati}/6 (Disponibili: ${rimanenti})`, '#51cf66', '#122618', '#2b8a3e');
                         ripristinaCampi();
                     }
-                } else {
-                    nascondiStato();
                 }
             }
 
@@ -301,13 +297,13 @@
                 const postiOccupati = getPostiOccupati(chiaveSlot);
 
                 if (postiOccupati >= 6) {
-                    mostraStato('❌ Spiacenti, questo corso ha esaurito i posti disponibili!', '#ff6b6b', '#2a1212');
+                    mostraStato('❌ Spiacenti, questo corso ha esaurito i posti disponibili!', '#ff6b6b', '#2a1212', '#a52a2a');
                     return;
                 }
                 
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Invio in corso...';
-                nascondiStato();
+                mostraStato('⏳ Invio della prenotazione in corso...', '#fcc419', '#2b2611', '#f59f00');
 
                 const formData = new FormData(bookingForm);
 
@@ -322,14 +318,14 @@
 
                     if (response.ok) {
                         incrementaPosti(chiaveSlot);
-                        mostraStato(`✅ Prenotazione riuscita! Notifica inviata a cirmor88@gmail.com.`, '#51cf66', '#122618');
+                        mostraStato(`✅ Prenotazione effettuata con successo! Notificata a cirmor88@gmail.com.`, '#51cf66', '#122618', '#2b8a3e');
                         bookingForm.reset();
                         aggiornaGiorni();
                     } else {
                         throw new Error('Errore server');
                     }
                 } catch (error) {
-                    mostraStato('❌ Errore durante la prenotazione. Riprova.', '#ff6b6b', '#2a1212');
+                    mostraStato('❌ Errore durante la prenotazione. Riprova.', '#ff6b6b', '#2a1212', '#a52a2a');
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'PRENOTA';
                 }
