@@ -319,6 +319,8 @@
                 const attivita = attivitaSelect.value;
                 const giorno = giornoSelect.value;
                 const orario = orarioSelect.value;
+                const nome = nomeInput.value;
+                const cognome = cognomeInput.value;
                 
                 const chiaveSlot = `${attivita}_${giorno}_${orario}`;
                 const postiOccupati = getPostiOccupati(chiaveSlot);
@@ -328,16 +330,26 @@
                     return;
                 }
                 
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'ELABORAZIONE...';
-                mostraStato('⏳ Registrazione in corso...', '#ff0000', '#000000', '#ff0000');
+                // Aggiorna il contatore dei posti in locale
+                incrementaPosti(chiaveSlot);
 
+                // Numero di telefono di Ciro configurato
+                const numeroCiro = "393281814024";
+
+                // Testo del messaggio precompilato per WhatsApp
+                const testoMessaggio = `🏋️ *Nuova Prenotazione - Steel Life*%0A` +
+                                       `👤 *Nome:* ${nome} ${cognome}%0A` +
+                                       `🥊 *Attività:* ${attivita}%0A` +
+                                       `📅 *Giorno:* ${giorno}%0A` +
+                                       `⏰ *Orario:* ${orario}`;
+
+                const urlWhatsApp = `https://wa.me/${numeroCiro}?text=${testoMessaggio}`;
+                
+                mostraStato(`✅ Prenotazione registrata! Apertura WhatsApp...`, '#00ff00', '#002200', '#00ff00');
+                
                 setTimeout(() => {
-                    incrementaPosti(chiaveSlot);
-                    mostraStato(`✅ Prenotazione completata con successo!`, '#00ff00', '#002200', '#00ff00');
-                    bookingForm.reset();
-                    aggiornaGiorni();
-                }, 1000);
+                    window.location.href = urlWhatsApp;
+                }, 800);
             });
         });
     </script>
