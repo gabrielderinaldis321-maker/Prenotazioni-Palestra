@@ -7,20 +7,21 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
+            background-color: #121212;
             margin: 0;
             padding: 15px;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            color: #e0e0e0;
         }
 
         .container {
-            background: #ffffff;
+            background: #1e1e1e;
             padding: 25px;
             border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
             width: 100%;
             max-width: 500px;
             box-sizing: border-box;
@@ -28,12 +29,12 @@
 
         h1 {
             margin-top: 0;
-            color: #222;
+            color: #ffffff;
             font-size: 22px;
         }
 
         .subtitle {
-            color: #666;
+            color: #aaaaaa;
             margin-bottom: 20px;
             font-size: 13px;
         }
@@ -53,12 +54,14 @@
             font-weight: bold;
             margin-bottom: 5px;
             font-size: 13px;
-            color: #333;
+            color: #cccccc;
         }
 
         input, select {
             padding: 12px;
-            border: 1px solid #ccc;
+            border: 1px solid #444;
+            background-color: #2a2a2a;
+            color: #ffffff;
             border-radius: 4px;
             font-size: 15px;
             width: 100%;
@@ -75,7 +78,7 @@
         }
 
         button {
-            background-color: #222;
+            background-color: #333;
             color: white;
             border: none;
             padding: 14px;
@@ -88,7 +91,7 @@
         }
 
         button:hover {
-            background-color: #444;
+            background-color: #555;
         }
 
         .status-message {
@@ -179,16 +182,7 @@
                 }
             };
 
-            function getPostiOccupati(chiaveSlot) {
-                return parseInt(localStorage.getItem(chiaveSlot) || '0');
-            }
-
-            function incrementaPosti(chiaveSlot) {
-                const attuali = getPostiOccupati(chiaveSlot);
-                localStorage.setItem(chiaveSlot, attuali + 1);
-            }
-
-            attivitaSelect.addEventListener('change', () => {
+            function aggiornaGiorniEdOrari() {
                 const attivita = attivitaSelect.value;
                 giornoSelect.innerHTML = '<option value="">Seleziona giorno</option>';
                 orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
@@ -200,14 +194,7 @@
                         opt.textContent = giorno;
                         giornoSelect.appendChild(opt);
                     });
-                }
-            });
 
-            giornoSelect.addEventListener('change', () => {
-                const attivita = attivitaSelect.value;
-                orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
-
-                if (attivita && orariDisponibili[attivita]) {
                     orariDisponibili[attivita].orari.forEach(orario => {
                         const opt = document.createElement('option');
                         opt.value = orario;
@@ -215,7 +202,21 @@
                         orarioSelect.appendChild(opt);
                     });
                 }
-            });
+            }
+
+            function getPostiOccupati(chiaveSlot) {
+                return parseInt(localStorage.getItem(chiaveSlot) || '0');
+            }
+
+            function incrementaPosti(chiaveSlot) {
+                const attuali = getPostiOccupati(chiaveSlot);
+                localStorage.setItem(chiaveSlot, attuali + 1);
+            }
+
+            attivitaSelect.addEventListener('change', aggiornaGiorniEdOrari);
+
+            // Eseguiamo subito il controllo all'avvio
+            aggiornaGiorniEdOrari();
 
             bookingForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -229,7 +230,7 @@
 
                 if (postiOccupati >= 6) {
                     formStatus.textContent = '❌ Spiacenti, questo corso per questo orario ha esaurito i 6 posti disponibili!';
-                    formStatus.style.color = 'red';
+                    formStatus.style.color = '#ff6b6b';
                     return;
                 }
                 
@@ -252,16 +253,15 @@
                     if (response.ok) {
                         incrementaPosti(chiaveSlot);
                         formStatus.textContent = `✅ Prenotazione effettuata con successo! Notificata a cirmor88@gmail.com.`;
-                        formStatus.style.color = 'green';
+                        formStatus.style.color = '#51cf66';
                         bookingForm.reset();
-                        orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
-                        giornoSelect.innerHTML = '<option value="">Seleziona giorno</option>';
+                        aggiornaGiorniEdOrari();
                     } else {
                         throw new Error('Errore nell\'invio');
                     }
                 } catch (error) {
                     formStatus.textContent = '❌ Errore durante la prenotazione. Riprova.';
-                    formStatus.style.color: 'red';
+                    formStatus.style.color = '#ff6b6b';
                 } finally {
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'PRENOTA';
