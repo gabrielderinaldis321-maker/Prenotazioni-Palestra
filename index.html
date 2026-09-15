@@ -68,6 +68,12 @@
             box-sizing: border-box;
         }
 
+        input:disabled, select:disabled {
+            background-color: #1a1a1a;
+            color: #666;
+            cursor: not-allowed;
+        }
+
         input:focus, select:focus {
             border-color: #007bff;
             outline: none;
@@ -90,8 +96,14 @@
             transition: background 0.2s;
         }
 
-        button:hover {
+        button:hover:not(:disabled) {
             background-color: #555;
+        }
+
+        button:disabled {
+            background-color: #333;
+            color: #666;
+            cursor: not-allowed;
         }
 
         .status-message {
@@ -160,6 +172,9 @@
             const attivitaSelect = document.getElementById('attivita');
             const giornoSelect = document.getElementById('giorno');
             const orarioSelect = document.getElementById('orario');
+            const nomeInput = document.getElementById('nome');
+            const cognomeInput = document.getElementById('cognome');
+            const submitBtn = document.getElementById('submitBtn');
             const bookingForm = document.getElementById('bookingForm');
             const formStatus = document.getElementById('formStatus');
 
@@ -186,6 +201,10 @@
                 const attivita = attivitaSelect.value;
                 giornoSelect.innerHTML = '<option value="">Seleziona giorno</option>';
                 orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
+                formStatus.textContent = '';
+                
+                // Riabilita i campi se cambia attività
+                abilitaForm(true);
 
                 if (attivita && orariDisponibili[attivita]) {
                     orariDisponibili[attivita].giorni.forEach(giorno => {
@@ -213,9 +232,52 @@
                 localStorage.setItem(chiaveSlot, attuali + 1);
             }
 
-            attivitaSelect.addEventListener('change', aggiornaGiorniEdOrari);
+            function abilitaForm(abilita) {
+                nomeInput.disabled = !abilita;
+                cognomeInput.disabled = !abilita;
+                giornoSelect.disabled = !abilita;
+                orarioSelect.disabled = !abilita && (giornoSelect.value === '');
+                submitBtn.disabled = !abilita;
+            }
 
-            // Eseguiamo subito il controllo all'avvio
+            function controllaDisponibilitaSlot() {
+                const attivita = attivitaSelect.value;
+                const giorno = giornoSelect.value;
+                const orario = orarioSelect.value;
+
+                if (attivita && giorno && orario) {
+                    const chiaveSlot = `${attivita}_${giorno}_${orario}`;
+                    const postiOccupati = getPostiOccupati(chiaveSlot);
+
+                    if (postiOccupati >= 6) {
+                        formStatus.textContent = '⛔ SUPERAMENTO LIMITE MASSIMO: Questo corso è al completo (6/6 posti esauriti). Prenotazioni bloccate.';
+                        formStatus.style.color = '#ff6b6b';
+                        
+                        // Blocca nome, cognome e tasto invio
+                        nomeInput.disabled = true;
+                        cognomeInput.disabled = true;
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'CORSO ESAURITO';
+                    } else {
+                        formStatus.textContent = `ℹ️ Posti occupati: ${postiOccupati}/6`;
+                        formStatus.style.color = '#51cf66';
+                        
+                        nomeInput.disabled = false;
+                        cognomeInput.disabled = false;
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'PRENOTA';
+                    }
+                }
+            }
+
+            attivitaSelect.addEventListener('change', () => {
+                aggiornaGiorniEdOrari();
+            });
+
+            giornoSelect.addEventListener('change', controllaDisponibilitaSlot);
+            orarioSelect.addEventListener('change', controllaDisponibilitaSlot);
+
+            // Eseguiamo il controllo all'avvio
             aggiornaGiorniEdOrari();
 
             bookingForm.addEventListener('submit', async (e) => {
@@ -229,12 +291,11 @@
                 const postiOccupati = getPostiOccupati(chiaveSlot);
 
                 if (postiOccupati >= 6) {
-                    formStatus.textContent = '❌ Spiacenti, questo corso per questo orario ha esaurito i 6 posti disponibili!';
+                    formStatus.textContent = '❌ Spiacenti, questo corso ha esaurito i posti disponibili!';
                     formStatus.style.color = '#ff6b6b';
                     return;
                 }
                 
-                const submitBtn = document.getElementById('submitBtn');
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Invio in corso...';
                 formStatus.textContent = '';
