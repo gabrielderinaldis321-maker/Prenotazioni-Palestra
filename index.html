@@ -7,47 +7,47 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #0b0b0b;
+            background-color: #000000; /* Sfondo nero puro */
             margin: 0;
             padding: 15px;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            color: #e0e0e0;
+            color: #ff0000; /* Font completamente rosso */
         }
 
         .container {
-            background: #141414;
+            background: #050000;
             padding: 30px;
             border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(220, 20, 60, 0.2);
+            box-shadow: 0 4px 20px rgba(255, 0, 0, 0.4);
             width: 100%;
             max-width: 500px;
             box-sizing: border-box;
-            border: 1px solid #2a0808;
+            border: 2px solid #ff0000; /* Bordo rosso */
         }
 
         .brand-title {
-            color: #ff1e38;
-            font-size: 28px;
+            color: #ff0000;
+            font-size: 32px;
             font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             margin: 0 0 5px 0;
             text-align: center;
         }
 
         h1 {
             margin-top: 0;
-            color: #ffffff;
+            color: #ff0000;
             font-size: 20px;
             text-align: center;
             margin-bottom: 5px;
         }
 
         .subtitle {
-            color: #888888;
+            color: #cc0000; /* Rosso scuro per il sottotitolo */
             margin-bottom: 25px;
             font-size: 13px;
             text-align: center;
@@ -67,31 +67,36 @@
         label {
             font-weight: bold;
             margin-bottom: 5px;
-            font-size: 13px;
-            color: #cccccc;
+            font-size: 14px;
+            color: #ff0000; /* Etichette rosse */
         }
 
         input, select {
             padding: 12px;
-            border: 1px solid #331010;
-            background-color: #1a1a1a;
-            color: #ffffff;
+            border: 1px solid #ff0000; /* Bordo input rosso */
+            background-color: #000000; /* Sfondo campi nero */
+            color: #ff0000; /* Testo scritto nei campi rosso */
             border-radius: 4px;
             font-size: 15px;
             width: 100%;
             box-sizing: border-box;
         }
 
+        input::placeholder {
+            color: #880000; /* Placeholder rosso scuro */
+        }
+
         input:disabled, select:disabled {
-            background-color: #101010;
-            color: #555;
+            background-color: #1a0000;
+            color: #550000;
+            border-color: #550000;
             cursor: not-allowed;
         }
 
         input:focus, select:focus {
-            border-color: #ff1e38;
+            border-color: #ff3333;
             outline: none;
-            box-shadow: 0 0 5px rgba(255, 30, 56, 0.4);
+            box-shadow: 0 0 8px rgba(255, 0, 0, 0.6);
         }
 
         .btn-container {
@@ -99,22 +104,23 @@
         }
 
         button {
-            background-color: #ff1e38;
-            color: white;
-            border: none;
+            background-color: #ff0000; /* Bottone rosso */
+            color: #000000; /* Testo bottone nero */
+            border: 2px solid #ff0000;
             padding: 14px;
-            font-size: 16px;
-            font-weight: bold;
+            font-size: 18px;
+            font-weight: 900;
             border-radius: 4px;
             cursor: pointer;
             width: 100%;
-            transition: background 0.2s, transform 0.1s;
+            transition: all 0.3s;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
         button:hover:not(:disabled) {
-            background-color: #d91029;
+            background-color: #000000; /* Effetto hover: sfondo nero */
+            color: #ff0000; /* Effetto hover: testo rosso */
         }
 
         button:active:not(:disabled) {
@@ -122,8 +128,9 @@
         }
 
         button:disabled {
-            background-color: #222;
-            color: #555;
+            background-color: #330000;
+            color: #000000;
+            border-color: #330000;
             cursor: not-allowed;
         }
 
@@ -134,9 +141,9 @@
             font-size: 14px;
             padding: 12px;
             border-radius: 4px;
-            border: 1px solid #333;
-            background-color: #1a1a1a;
-            color: #aaaaaa;
+            border: 1px solid #ff0000;
+            background-color: #000000;
+            color: #ff0000;
         }
     </style>
 </head>
@@ -156,11 +163,6 @@
                 <div class="form-group">
                     <label for="cognome">Cognome</label>
                     <input type="text" id="cognome" name="cognome" placeholder="Inserisci il cognome" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" placeholder="Inserisci la tua email" required>
                 </div>
 
                 <div class="form-group">
@@ -204,7 +206,6 @@
             const orarioSelect = document.getElementById('orario');
             const nomeInput = document.getElementById('nome');
             const cognomeInput = document.getElementById('cognome');
-            const emailInput = document.getElementById('email');
             const submitBtn = document.getElementById('submitBtn');
             const bookingForm = document.getElementById('bookingForm');
             const formStatus = document.getElementById('formStatus');
@@ -240,7 +241,7 @@
                 giornoSelect.innerHTML = '<option value="">Seleziona giorno</option>';
                 orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
                 ripristinaCampi();
-                mostraStato("Seleziona giorno e orario per verificare la disponibilità.", "#aaaaaa", "#1a1a1a", "#333");
+                mostraStato("Seleziona giorno e orario per verificare la disponibilità.", "#ff0000", "#000000", "#ff0000");
 
                 if (attivita && orariDisponibili[attivita]) {
                     orariDisponibili[attivita].giorni.forEach(giorno => {
@@ -257,7 +258,7 @@
                 const giorno = giornoSelect.value;
                 orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
                 ripristinaCampi();
-                mostraStato("Seleziona l'orario per procedere.", "#aaaaaa", "#1a1a1a", "#333");
+                mostraStato("Seleziona l'orario per procedere.", "#ff0000", "#000000", "#ff0000");
 
                 if (attivita && giorno && orariDisponibili[attivita]) {
                     orariDisponibili[attivita].orari.forEach(orario => {
@@ -281,7 +282,6 @@
             function ripristinaCampi() {
                 nomeInput.disabled = false;
                 cognomeInput.disabled = false;
-                emailInput.disabled = false;
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'PRENOTA';
             }
@@ -296,15 +296,15 @@
                     const postiOccupati = getPostiOccupati(chiaveSlot);
 
                     if (postiOccupati >= 6) {
-                        mostraStato('⛔ SUPERAMENTO LIMITE MASSIMO: Questo corso è al completo (6/6 posti esauriti).', '#ff6b6b', '#2a1212', '#a52a2a');
+                        mostraStato('⛔ SUPERAMENTO LIMITE MASSIMO: Questo corso è al completo (6/6 posti esauriti).', '#ff0000', '#220000', '#ff0000');
                         nomeInput.disabled = true;
                         cognomeInput.disabled = true;
-                        emailInput.disabled = true;
                         submitBtn.disabled = true;
                         submitBtn.textContent = 'CORSO ESAURITO';
                     } else {
                         const rimanenti = 6 - postiOccupati;
-                        mostraStato(`ℹ️ Posti occupati: ${postiOccupati}/6 (Disponibili: ${rimanenti})`, '#51cf66', '#122618', '#2b8a3e');
+                        // Manteniamo verde solo il messaggio di via libera, per staccare dal rosso
+                        mostraStato(`ℹ️ Posti occupati: ${postiOccupati}/6 (Disponibili: ${rimanenti})`, '#00ff00', '#002200', '#00ff00');
                         ripristinaCampi();
                     }
                 }
@@ -314,7 +314,7 @@
             giornoSelect.addEventListener('change', aggiornaOrari);
             orarioSelect.addEventListener('change', controllaSlot);
 
-            bookingForm.addEventListener('submit', async (e) => {
+            bookingForm.addEventListener('submit', (e) => {
                 e.preventDefault();
 
                 const attivita = attivitaSelect.value;
@@ -325,36 +325,22 @@
                 const postiOccupati = getPostiOccupati(chiaveSlot);
 
                 if (postiOccupati >= 6) {
-                    mostraStato('❌ Spiacenti, questo corso ha esaurito i posti disponibili!', '#ff6b6b', '#2a1212', '#a52a2a');
+                    mostraStato('❌ Spiacenti, questo corso ha esaurito i posti disponibili!', '#ff0000', '#220000', '#ff0000');
                     return;
                 }
                 
                 submitBtn.disabled = true;
-                submitBtn.textContent = 'Invio in corso...';
-                mostraStato('⏳ Invio della prenotazione in corso...', '#fcc419', '#2b2611', '#f59f00');
+                submitBtn.textContent = 'ELABORAZIONE...';
+                mostraStato('⏳ Registrazione in corso...', '#ff0000', '#000000', '#ff0000');
 
-                const formData = new FormData(bookingForm);
-
-                try {
-                    await fetch("https://formspree.io/f/myeyraqk", {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'Accept': 'application/json'
-                        }
-                    });
-
+                // === QUI INSERIREMO IL NUOVO SISTEMA PER MANDARE LA MAIL A CIRO ===
+                // Per ora simula solo il successo per non bloccare il sistema:
+                setTimeout(() => {
                     incrementaPosti(chiaveSlot);
-                    mostraStato(`✅ Prenotazione effettuata con successo!`, '#51cf66', '#122618', '#2b8a3e');
+                    mostraStato(`✅ Prenotazione completata con successo!`, '#00ff00', '#002200', '#00ff00');
                     bookingForm.reset();
                     aggiornaGiorni();
-
-                } catch (error) {
-                    incrementaPosti(chiaveSlot);
-                    mostraStato(`✅ Prenotazione registrata con successo!`, '#51cf66', '#122618', '#2b8a3e');
-                    bookingForm.reset();
-                    aggiornaGiorni();
-                }
+                }, 1000);
             });
         });
     </script>
