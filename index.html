@@ -84,7 +84,7 @@
         }
 
         button {
-            background-color: #333;
+            background-color: #007bff;
             color: white;
             border: none;
             padding: 14px;
@@ -97,7 +97,7 @@
         }
 
         button:hover:not(:disabled) {
-            background-color: #555;
+            background-color: #0056b3;
         }
 
         button:disabled {
@@ -111,13 +111,15 @@
             font-weight: bold;
             text-align: center;
             font-size: 14px;
+            padding: 10px;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🏋️ Prenota</h1>
-        <p class="subtitle">Prenota il tuo allenamento (Max 6 persone per corso)</p>
+        <h1>🏋️ Prenota Corso</h1>
+        <p class="subtitle">Seleziona attività, giorno e orario (Max 6 persone per slot)</p>
 
         <form id="bookingForm" action="https://formspree.io/f/myeyraqk" method="POST">
             <input type="hidden" name="_to" value="cirmor88@gmail.com">
@@ -147,14 +149,14 @@
                 <div class="form-group">
                     <label for="giorno">Giorno</label>
                     <select id="giorno" name="giorno" required>
-                        <option value="">Seleziona giorno</option>
+                        <option value="">Seleziona prima un'attività</option>
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label for="orario">Orario</label>
                     <select id="orario" name="orario" required>
-                        <option value="">Seleziona orario</option>
+                        <option value="">Seleziona prima un giorno</option>
                     </select>
                 </div>
 
@@ -164,7 +166,7 @@
             </div>
         </form>
 
-        <div id="formStatus" class="status-message"></div>
+        <div id="formStatus" class="status-message" style="display: none;"></div>
     </div>
 
     <script>
@@ -197,14 +199,24 @@
                 }
             };
 
-            function aggiornaGiorniEdOrari() {
+            function mostraStato(messaggio, colore, sfondo) {
+                formStatus.style.display = 'block';
+                formStatus.textContent = messaggio;
+                formStatus.style.color = colore;
+                formStatus.style.backgroundColor = sfondo;
+            }
+
+            function nascondiStato() {
+                formStatus.style.display = 'none';
+                formStatus.textContent = '';
+            }
+
+            function aggiornaGiorni() {
                 const attivita = attivitaSelect.value;
                 giornoSelect.innerHTML = '<option value="">Seleziona giorno</option>';
                 orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
-                formStatus.textContent = '';
-                
-                // Riabilita i campi se cambia attività
-                abilitaForm(true);
+                nascondiStato();
+                ripristinaCampi();
 
                 if (attivita && orariDisponibili[attivita]) {
                     orariDisponibili[attivita].giorni.forEach(giorno => {
@@ -213,7 +225,17 @@
                         opt.textContent = giorno;
                         giornoSelect.appendChild(opt);
                     });
+                }
+            }
 
+            function aggiornaOrari() {
+                const attivita = attivitaSelect.value;
+                const giorno = giornoSelect.value;
+                orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
+                nascondiStato();
+                ripristinaCampi();
+
+                if (attivita && giorno && orariDisponibili[attivita]) {
                     orariDisponibili[attivita].orari.forEach(orario => {
                         const opt = document.createElement('option');
                         opt.value = orario;
@@ -232,15 +254,14 @@
                 localStorage.setItem(chiaveSlot, attuali + 1);
             }
 
-            function abilitaForm(abilita) {
-                nomeInput.disabled = !abilita;
-                cognomeInput.disabled = !abilita;
-                giornoSelect.disabled = !abilita;
-                orarioSelect.disabled = !abilita && (giornoSelect.value === '');
-                submitBtn.disabled = !abilita;
+            function ripristinaCampi() {
+                nomeInput.disabled = false;
+                cognomeInput.disabled = false;
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'PRENOTA';
             }
 
-            function controllaDisponibilitaSlot() {
+            function controllaSlot() {
                 const attivita = attivitaSelect.value;
                 const giorno = giornoSelect.value;
                 const orario = orarioSelect.value;
@@ -250,35 +271,24 @@
                     const postiOccupati = getPostiOccupati(chiaveSlot);
 
                     if (postiOccupati >= 6) {
-                        formStatus.textContent = '⛔ SUPERAMENTO LIMITE MASSIMO: Questo corso è al completo (6/6 posti esauriti). Prenotazioni bloccate.';
-                        formStatus.style.color = '#ff6b6b';
-                        
-                        // Blocca nome, cognome e tasto invio
+                        mostraStato('⛔ SUPERAMENTO LIMITE MASSIMO: Questo corso è al completo (6/6 posti esauriti).', '#ff6b6b', '#2a1212');
                         nomeInput.disabled = true;
                         cognomeInput.disabled = true;
                         submitBtn.disabled = true;
                         submitBtn.textContent = 'CORSO ESAURITO';
                     } else {
-                        formStatus.textContent = `ℹ️ Posti occupati: ${postiOccupati}/6`;
-                        formStatus.style.color = '#51cf66';
-                        
-                        nomeInput.disabled = false;
-                        cognomeInput.disabled = false;
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'PRENOTA';
+                        const rimanenti = 6 - postiOccupati;
+                        mostraStato(`ℹ️ Posti occupati: ${postiOccupati}/6 (Disponibili: ${rimanenti})`, '#51cf66', '#122618');
+                        ripristinaCampi();
                     }
+                } else {
+                    nascondiStato();
                 }
             }
 
-            attivitaSelect.addEventListener('change', () => {
-                aggiornaGiorniEdOrari();
-            });
-
-            giornoSelect.addEventListener('change', controllaDisponibilitaSlot);
-            orarioSelect.addEventListener('change', controllaDisponibilitaSlot);
-
-            // Eseguiamo il controllo all'avvio
-            aggiornaGiorniEdOrari();
+            attivitaSelect.addEventListener('change', aggiornaGiorni);
+            giornoSelect.addEventListener('change', aggiornaOrari);
+            orarioSelect.addEventListener('change', controllaSlot);
 
             bookingForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -291,14 +301,13 @@
                 const postiOccupati = getPostiOccupati(chiaveSlot);
 
                 if (postiOccupati >= 6) {
-                    formStatus.textContent = '❌ Spiacenti, questo corso ha esaurito i posti disponibili!';
-                    formStatus.style.color = '#ff6b6b';
+                    mostraStato('❌ Spiacenti, questo corso ha esaurito i posti disponibili!', '#ff6b6b', '#2a1212');
                     return;
                 }
                 
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Invio in corso...';
-                formStatus.textContent = '';
+                nascondiStato();
 
                 const formData = new FormData(bookingForm);
 
@@ -313,17 +322,14 @@
 
                     if (response.ok) {
                         incrementaPosti(chiaveSlot);
-                        formStatus.textContent = `✅ Prenotazione effettuata con successo! Notificata a cirmor88@gmail.com.`;
-                        formStatus.style.color = '#51cf66';
+                        mostraStato(`✅ Prenotazione riuscita! Notifica inviata a cirmor88@gmail.com.`, '#51cf66', '#122618');
                         bookingForm.reset();
-                        aggiornaGiorniEdOrari();
+                        aggiornaGiorni();
                     } else {
-                        throw new Error('Errore nell\'invio');
+                        throw new Error('Errore server');
                     }
                 } catch (error) {
-                    formStatus.textContent = '❌ Errore durante la prenotazione. Riprova.';
-                    formStatus.style.color = '#ff6b6b';
-                } finally {
+                    mostraStato('❌ Errore durante la prenotazione. Riprova.', '#ff6b6b', '#2a1212');
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'PRENOTA';
                 }
