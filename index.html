@@ -125,9 +125,6 @@
         <p class="subtitle">Seleziona attività, giorno e orario (Max 6 persone per slot)</p>
 
         <form id="bookingForm">
-            <!-- Campo per indirizzare la mail a cirmor88@gmail.com -->
-            <input type="hidden" name="_to" value="cirmor88@gmail.com">
-
             <div class="form-grid">
                 <div class="form-group">
                     <label for="nome">Nome</label>
@@ -140,7 +137,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="email">La tua Email (per la conferma)</label>
+                    <label for="email">Email</label>
                     <input type="email" id="email" name="email" placeholder="Inserisci la tua email" required>
                 </div>
 
@@ -326,7 +323,7 @@
                     });
 
                     incrementaPosti(chiaveSlot);
-                    mostraStato(`✅ Prenotazione effettuata con successo! Notifica inviata a cirmor88@gmail.com.`, '#51cf66', '#122618', '#2b8a3e');
+                    mostraStato(`✅ Prenotazione effettuata con successo!`, '#51cf66', '#122618', '#2b8a3e');
                     bookingForm.reset();
                     aggiornaGiorni();
 
