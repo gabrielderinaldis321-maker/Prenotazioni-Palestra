@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prenotazione Corsi Palestra</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            margin-top: 0;
+            color: #222;
+            font-size: 22px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .form-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 13px;
+            color: #333;
+        }
+
+        input, select {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 15px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        input:focus, select:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        .btn-container {
+            margin-top: 10px;
+        }
+
+        button {
+            background-color: #222;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #444;
+        }
+
+        .status-message {
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏋️ Prenota</h1>
+        <p class="subtitle">Prenota il tuo allenamento (Max 6 persone per corso)</p>
+
+        <form id="bookingForm" action="https://formspree.io/f/myeyraqk" method="POST">
+            <input type="hidden" name="_to" value="cirmor88@gmail.com">
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="nome">Nome</label>
+                    <input type="text" id="nome" name="nome" placeholder="Inserisci il nome" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="cognome">Cognome</label>
+                    <input type="text" id="cognome" name="cognome" placeholder="Inserisci il cognome" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="attivita">Attività</label>
+                    <select id="attivita" name="attivita" required>
+                        <option value="">Seleziona attività</option>
+                        <option value="MMA">MMA</option>
+                        <option value="Boxe">Boxe</option>
+                        <option value="Kickboxing">Kickboxing</option>
+                        <option value="BJJ">BJJ</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="giorno">Giorno</label>
+                    <select id="giorno" name="giorno" required>
+                        <option value="">Seleziona giorno</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="orario">Orario</label>
+                    <select id="orario" name="orario" required>
+                        <option value="">Seleziona orario</option>
+                    </select>
+                </div>
+
+                <div class="form-group btn-container">
+                    <button type="submit" id="submitBtn">PRENOTA</button>
+                </div>
+            </div>
+        </form>
+
+        <div id="formStatus" class="status-message"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const attivitaSelect = document.getElementById('attivita');
+            const giornoSelect = document.getElementById('giorno');
+            const orarioSelect = document.getElementById('orario');
+            const bookingForm = document.getElementById('bookingForm');
+            const formStatus = document.getElementById('formStatus');
+
+            const orariDisponibili = {
+                "MMA": {
+                    giorni: ["Lunedì", "Mercoledì", "Venerdì"],
+                    orari: ["18:00 - 19:00", "19:00 - 20:00", "20:00 - 21:00"]
+                },
+                "Boxe": {
+                    giorni: ["Martedì", "Giovedì"],
+                    orari: ["18:00 - 19:00"]
+                },
+                "Kickboxing": {
+                    giorni: ["Martedì", "Giovedì"],
+                    orari: ["19:00 - 20:00"]
+                },
+                "BJJ": {
+                    giorni: ["Martedì", "Giovedì"],
+                    orari: ["20:00 - 21:00"]
+                }
+            };
+
+            function getPostiOccupati(chiaveSlot) {
+                return parseInt(localStorage.getItem(chiaveSlot) || '0');
+            }
+
+            function incrementaPosti(chiaveSlot) {
+                const attuali = getPostiOccupati(chiaveSlot);
+                localStorage.setItem(chiaveSlot, attuali + 1);
+            }
+
+            attivitaSelect.addEventListener('change', () => {
+                const attivita = attivitaSelect.value;
+                giornoSelect.innerHTML = '<option value="">Seleziona giorno</option>';
+                orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
+
+                if (attivita && orariDisponibili[attivita]) {
+                    orariDisponibili[attivita].giorni.forEach(giorno => {
+                        const opt = document.createElement('option');
+                        opt.value = giorno;
+                        opt.textContent = giorno;
+                        giornoSelect.appendChild(opt);
+                    });
+                }
+            });
+
+            giornoSelect.addEventListener('change', () => {
+                const attivita = attivitaSelect.value;
+                orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
+
+                if (attivita && orariDisponibili[attivita]) {
+                    orariDisponibili[attivita].orari.forEach(orario => {
+                        const opt = document.createElement('option');
+                        opt.value = orario;
+                        opt.textContent = orario;
+                        orarioSelect.appendChild(opt);
+                    });
+                }
+            });
+
+            bookingForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const attivita = attivitaSelect.value;
+                const giorno = giornoSelect.value;
+                const orario = orarioSelect.value;
+                
+                const chiaveSlot = `${attivita}_${giorno}_${orario}`;
+                const postiOccupati = getPostiOccupati(chiaveSlot);
+
+                if (postiOccupati >= 6) {
+                    formStatus.textContent = '❌ Spiacenti, questo corso per questo orario ha esaurito i 6 posti disponibili!';
+                    formStatus.style.color = 'red';
+                    return;
+                }
+                
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Invio in corso...';
+                formStatus.textContent = '';
+
+                const formData = new FormData(bookingForm);
+
+                try {
+                    const response = await fetch(bookingForm.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        incrementaPosti(chiaveSlot);
+                        formStatus.textContent = `✅ Prenotazione effettuata con successo! Notificata a cirmor88@gmail.com.`;
+                        formStatus.style.color = 'green';
+                        bookingForm.reset();
+                        orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
+                        giornoSelect.innerHTML = '<option value="">Seleziona giorno</option>';
+                    } else {
+                        throw new Error('Errore nell\'invio');
+                    }
+                } catch (error) {
+                    formStatus.textContent = '❌ Errore durante la prenotazione. Riprova.';
+                    formStatus.style.color: 'red';
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'PRENOTA';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
