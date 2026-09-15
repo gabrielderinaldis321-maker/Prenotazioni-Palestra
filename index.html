@@ -7,14 +7,14 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #000000; /* Sfondo nero puro */
+            background-color: #000000;
             margin: 0;
             padding: 15px;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            color: #ff0000; /* Font completamente rosso */
+            color: #ff0000;
         }
 
         .container {
@@ -25,7 +25,7 @@
             width: 100%;
             max-width: 500px;
             box-sizing: border-box;
-            border: 2px solid #ff0000; /* Bordo rosso */
+            border: 2px solid #ff0000;
         }
 
         .brand-title {
@@ -47,7 +47,7 @@
         }
 
         .subtitle {
-            color: #cc0000; /* Rosso scuro per il sottotitolo */
+            color: #cc0000;
             margin-bottom: 25px;
             font-size: 13px;
             text-align: center;
@@ -68,14 +68,14 @@
             font-weight: bold;
             margin-bottom: 5px;
             font-size: 14px;
-            color: #ff0000; /* Etichette rosse */
+            color: #ff0000;
         }
 
         input, select {
             padding: 12px;
-            border: 1px solid #ff0000; /* Bordo input rosso */
-            background-color: #000000; /* Sfondo campi nero */
-            color: #ff0000; /* Testo scritto nei campi rosso */
+            border: 1px solid #ff0000;
+            background-color: #000000;
+            color: #ff0000;
             border-radius: 4px;
             font-size: 15px;
             width: 100%;
@@ -83,7 +83,7 @@
         }
 
         input::placeholder {
-            color: #880000; /* Placeholder rosso scuro */
+            color: #880000;
         }
 
         input:disabled, select:disabled {
@@ -104,8 +104,8 @@
         }
 
         button {
-            background-color: #ff0000; /* Bottone rosso */
-            color: #000000; /* Testo bottone nero */
+            background-color: #ff0000;
+            color: #000000;
             border: 2px solid #ff0000;
             padding: 14px;
             font-size: 18px;
@@ -119,8 +119,8 @@
         }
 
         button:hover:not(:disabled) {
-            background-color: #000000; /* Effetto hover: sfondo nero */
-            color: #ff0000; /* Effetto hover: testo rosso */
+            background-color: #000000;
+            color: #ff0000;
         }
 
         button:active:not(:disabled) {
@@ -303,7 +303,6 @@
                         submitBtn.textContent = 'CORSO ESAURITO';
                     } else {
                         const rimanenti = 6 - postiOccupati;
-                        // Manteniamo verde solo il messaggio di via libera, per staccare dal rosso
                         mostraStato(`ℹ️ Posti occupati: ${postiOccupati}/6 (Disponibili: ${rimanenti})`, '#00ff00', '#002200', '#00ff00');
                         ripristinaCampi();
                     }
@@ -333,8 +332,6 @@
                 submitBtn.textContent = 'ELABORAZIONE...';
                 mostraStato('⏳ Registrazione in corso...', '#ff0000', '#000000', '#ff0000');
 
-                // === QUI INSERIREMO IL NUOVO SISTEMA PER MANDARE LA MAIL A CIRO ===
-                // Per ora simula solo il successo per non bloccare il sistema:
                 setTimeout(() => {
                     incrementaPosti(chiaveSlot);
                     mostraStato(`✅ Prenotazione completata con successo!`, '#00ff00', '#002200', '#00ff00');
