@@ -229,6 +229,21 @@
                 }
             };
 
+            // Funzione per calcolare il numero della settimana corrente (es. 2026-W38)
+            function getNumeroSettimanaCorrente() {
+                const d = new Date();
+                d.setHours(0, 0, 0, 0);
+                d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                const annoInizio = new Date(d.getFullYear(), 0, 1);
+                const numeroSettimana = Math.ceil((((d - annoInizio) / 86400000) + 1) / 7);
+                return `${d.getFullYear()}-W${numeroSettimana}`;
+            }
+
+            function getChiaveSlot(attivita, giorno, orario) {
+                const settimana = getNumeroSettimanaCorrente();
+                return `${settimana}_${attivita}_${giorno}_${orario}`;
+            }
+
             function mostraStato(messaggio, coloreTesto, coloreSfondo, coloreBordo) {
                 formStatus.textContent = messaggio;
                 formStatus.style.color = coloreTesto;
@@ -292,7 +307,7 @@
                 const orario = orarioSelect.value;
 
                 if (attivita && giorno && orario) {
-                    const chiaveSlot = `${attivita}_${giorno}_${orario}`;
+                    const chiaveSlot = getChiaveSlot(attivita, giorno, orario);
                     const postiOccupati = getPostiOccupati(chiaveSlot);
 
                     if (postiOccupati >= 6) {
@@ -322,7 +337,7 @@
                 const nome = nomeInput.value;
                 const cognome = cognomeInput.value;
                 
-                const chiaveSlot = `${attivita}_${giorno}_${orario}`;
+                const chiaveSlot = getChiaveSlot(attivita, giorno, orario);
                 const postiOccupati = getPostiOccupati(chiaveSlot);
 
                 if (postiOccupati >= 6) {
@@ -330,10 +345,10 @@
                     return;
                 }
                 
-                // Aggiorna il contatore dei posti in locale
+                // Aggiorna il contatore dei posti legato alla settimana corrente
                 incrementaPosti(chiaveSlot);
 
-                // Numero di telefono di Ciro configurato
+                // Numero di telefono di Ciro
                 const numeroCiro = "393281814024";
 
                 // Testo del messaggio precompilato per WhatsApp
