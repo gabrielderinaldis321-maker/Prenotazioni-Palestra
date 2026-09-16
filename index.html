@@ -19,7 +19,7 @@
 
         .container {
             background: #050000;
-            padding: 30px;
+            padding: 25px;
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(255, 0, 0, 0.4);
             width: 100%;
@@ -59,7 +59,7 @@
             border: 1px solid #ff0000;
             border-radius: 6px;
             padding: 12px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         .dashboard-title {
@@ -75,8 +75,8 @@
         .slot-grid {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            max-height: 180px;
+            gap: 5px;
+            max-height: 160px;
             overflow-y: auto;
         }
 
@@ -84,7 +84,7 @@
             display: flex;
             justify-content: space-between;
             background: #000000;
-            padding: 8px 10px;
+            padding: 7px 10px;
             border-radius: 4px;
             font-size: 12px;
             border: 1px solid #330000;
@@ -100,7 +100,7 @@
         .form-grid {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
         }
 
         .form-group {
@@ -110,18 +110,18 @@
 
         label {
             font-weight: bold;
-            margin-bottom: 5px;
-            font-size: 14px;
+            margin-bottom: 4px;
+            font-size: 13px;
             color: #ff0000;
         }
 
         input, select {
-            padding: 12px;
+            padding: 10px;
             border: 1px solid #ff0000;
             background-color: #000000;
             color: #ff0000;
             border-radius: 4px;
-            font-size: 15px;
+            font-size: 14px;
             width: 100%;
             box-sizing: border-box;
         }
@@ -144,15 +144,15 @@
         }
 
         .btn-container {
-            margin-top: 10px;
+            margin-top: 5px;
         }
 
         button {
             background-color: #ff0000;
             color: #000000;
             border: 2px solid #ff0000;
-            padding: 14px;
-            font-size: 18px;
+            padding: 12px;
+            font-size: 16px;
             font-weight: 900;
             border-radius: 4px;
             cursor: pointer;
@@ -179,11 +179,11 @@
         }
 
         .status-message {
-            margin-top: 20px;
+            margin-top: 15px;
             font-weight: bold;
             text-align: center;
-            font-size: 14px;
-            padding: 12px;
+            font-size: 13px;
+            padding: 10px;
             border-radius: 4px;
             border: 1px solid #ff0000;
             background-color: #000000;
@@ -200,9 +200,7 @@
         <!-- Riepilogo in tempo reale dei corsi della settimana -->
         <div class="dashboard-corsi">
             <div class="dashboard-title">📊 Stato Corsi di questa Settimana</div>
-            <div id="listaStatoCorsi" class="slot-grid">
-                <!-- Caricato via JS -->
-            </div>
+            <div id="listaStatoCorsi" class="slot-grid"></div>
         </div>
 
         <form id="bookingForm">
@@ -307,17 +305,17 @@
                 if (!listaStatoCorsi) return;
                 listaStatoCorsi.innerHTML = '';
                 
-                for (const [attivita, dati] of Object.entries(orariDisponibili)) {
+                for (const [nomeAttivita, dati] of Object.entries(orariDisponibili)) {
                     dati.giorni.forEach(giorno => {
                         dati.orari.forEach(orario => {
-                            const chiave = getChiaveSlot(attivita, giorno, orario);
+                            const chiave = getChiaveSlot(nomeAttivita, giorno, orario);
                             const posti = parseInt(localStorage.getItem(chiave) || '0');
                             
                             const div = document.createElement('div');
                             div.className = `slot-item ${posti >= 6 ? 'esaurito' : ''}`;
                             
                             const testoStato = posti >= 6 ? 'ESAURITO (6/6)' : `${posti}/6 posti`;
-                            div.innerHTML = `<span><b>${attivita}</b> (${giorno} - ${orario})</span> <span>${testoStato}</span>`;
+                            div.innerHTML = `<span><b>${nomeAttivita}</b> (${giorno} - ${orario})</span> <span>${testoStato}</span>`;
                             
                             listaStatoCorsi.appendChild(div);
                         });
@@ -438,7 +436,7 @@
                 }, 800);
             });
 
-            // Inizializza subito la dashboard all'avvio
+            // Avvio immediato della dashboard
             aggiornaDashboardCorsi();
         });
     </script>
