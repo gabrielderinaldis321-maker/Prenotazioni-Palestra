@@ -75,9 +75,8 @@
         .slot-grid {
             display: flex;
             flex-direction: column;
-            gap: lib;
             gap: 6px;
-            max-height: 150px;
+            max-height: 160px;
             overflow-y: auto;
         }
 
@@ -281,7 +280,6 @@
                 }
             };
 
-            // Funzione per calcolare il numero della settimana corrente (es. 2026-W38)
             function getNumeroSettimanaCorrente() {
                 const d = new Date();
                 d.setHours(0, 0, 0, 0);
@@ -303,11 +301,9 @@
                 formStatus.style.borderColor = coloreBordo;
             }
 
-            // Funzione per aggiornare il box visivo dei corsi in tempo reale
             function aggiornaDashboardCorsi() {
                 listaStatoCorsi.innerHTML = '';
                 
-                // Cicla tutte le attività, giorni e orari per comporre il quadro generale
                 for (const [attivita, dati] of Object.entries(orariDisponibili)) {
                     dati.giorni.forEach(giorno => {
                         dati.orari.forEach(orario => {
@@ -420,16 +416,10 @@
                     return;
                 }
                 
-                // Aggiorna il contatore dei posti legato alla settimana corrente
                 incrementaPosti(chiaveSlot);
-                
-                // Aggiorna subito la dashboard visiva
                 aggiornaDashboardCorsi();
 
-                // Numero di telefono di Ciro
                 const numeroCiro = "393281814024";
-
-                // Testo del messaggio precompilato per WhatsApp
                 const testoMessaggio = `🏋️ *Nuova Prenotazione - Steel Life*%0A` +
                                        `👤 *Nome:* ${nome} ${cognome}%0A` +
                                        `🥊 *Attività:* ${attivita}%0A` +
@@ -445,7 +435,6 @@
                 }, 800);
             });
 
-            // Carica la dashboard all'avvio della pagina
             aggiornaDashboardCorsi();
         });
     </script>
