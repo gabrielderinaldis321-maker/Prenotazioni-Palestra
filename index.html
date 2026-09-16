@@ -23,7 +23,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(255, 0, 0, 0.4);
             width: 100%;
-            max-width: 500px;
+            max-width: 550px;
             box-sizing: border-box;
             border: 2px solid #ff0000;
         }
@@ -48,9 +48,52 @@
 
         .subtitle {
             color: #cc0000;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             font-size: 13px;
             text-align: center;
+        }
+
+        /* Stile per il riepilogo dei corsi settimanali */
+        .dashboard-corsi {
+            background: #100000;
+            border: 1px solid #ff0000;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 25px;
+        }
+
+        .dashboard-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #ff3333;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .slot-grid {
+            display: flex;
+            flex-direction: column;
+            gap: lib;
+            gap: 6px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .slot-item {
+            display: flex;
+            justify-content: space-between;
+            background: #000000;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            border: 1px solid #330000;
+        }
+
+        .slot-item.esaurito {
+            border-color: #ff0000;
+            color: #ff4d4d;
         }
 
         .form-grid {
@@ -153,6 +196,14 @@
         <h1>🏋️ Prenota Corso</h1>
         <p class="subtitle">Seleziona attività, giorno e orario (Max 6 persone per slot)</p>
 
+        <!-- Riepilogo in tempo reale dei corsi della settimana -->
+        <div class="dashboard-corsi">
+            <div class="dashboard-title">📊 Stato Corsi di questa Settimana</div>
+            <div id="listaStatoCorsi" class="slot-grid">
+                <!-- Generato dinamicamente via JS -->
+            </div>
+        </div>
+
         <form id="bookingForm">
             <div class="form-grid">
                 <div class="form-group">
@@ -209,6 +260,7 @@
             const submitBtn = document.getElementById('submitBtn');
             const bookingForm = document.getElementById('bookingForm');
             const formStatus = document.getElementById('formStatus');
+            const listaStatoCorsi = document.getElementById('listaStatoCorsi');
 
             const orariDisponibili = {
                 "MMA": {
@@ -249,6 +301,29 @@
                 formStatus.style.color = coloreTesto;
                 formStatus.style.backgroundColor = coloreSfondo;
                 formStatus.style.borderColor = coloreBordo;
+            }
+
+            // Funzione per aggiornare il box visivo dei corsi in tempo reale
+            function aggiornaDashboardCorsi() {
+                listaStatoCorsi.innerHTML = '';
+                
+                // Cicla tutte le attività, giorni e orari per comporre il quadro generale
+                for (const [attivita, dati] of Object.entries(orariDisponibili)) {
+                    dati.giorni.forEach(giorno => {
+                        dati.orari.forEach(orario => {
+                            const chiave = getChiaveSlot(attivita, giorno, orario);
+                            const posti = parseInt(localStorage.getItem(chiave) || '0');
+                            
+                            const div = document.createElement('div');
+                            div.className = `slot-item ${posti >= 6 ? 'esaurito' : ''}`;
+                            
+                            const testoStato = posti >= 6 ? 'ESAURITO (6/6)' : `${posti}/6 posti`;
+                            div.innerHTML = `<span><b>${attivita}</b> (${giorno} ${orario.split(' - ')[0]})</span> <span>${testoStato}</span>`;
+                            
+                            listaStatoCorsi.appendChild(div);
+                        });
+                    });
+                }
             }
 
             function aggiornaGiorni() {
@@ -347,6 +422,9 @@
                 
                 // Aggiorna il contatore dei posti legato alla settimana corrente
                 incrementaPosti(chiaveSlot);
+                
+                // Aggiorna subito la dashboard visiva
+                aggiornaDashboardCorsi();
 
                 // Numero di telefono di Ciro
                 const numeroCiro = "393281814024";
@@ -366,6 +444,9 @@
                     window.location.href = urlWhatsApp;
                 }, 800);
             });
+
+            // Carica la dashboard all'avvio della pagina
+            aggiornaDashboardCorsi();
         });
     </script>
 </body>
