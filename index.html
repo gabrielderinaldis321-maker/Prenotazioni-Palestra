@@ -322,7 +322,6 @@
                 formStatus.style.borderColor = coloreBordo;
             }
 
-            // Funzioni Cloud (JSONBin)
             async function fetchBookings() {
                 try {
                     const response = await fetch(`https://api.jsonbin.io/v3/b/` + BIN_ID + `/latest`, {
@@ -446,7 +445,6 @@
             giornoSelect.addEventListener('change', aggiornaOrari);
             orarioSelect.addEventListener('change', controllaSlot);
 
-            // Gestione Prenotazione
             bookingForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
@@ -488,7 +486,6 @@
                 }, 800);
             });
 
-            // Gestione Disdetta
             disdiciBtn.addEventListener('click', async () => {
                 const attivita = attivitaSelect.value;
                 const giorno = giornoSelect.value;
@@ -524,7 +521,6 @@
                 }, 800);
             });
 
-            // Avvio iniziale scaricando i dati dal cloud
             fetchBookings();
         });
     </script>
