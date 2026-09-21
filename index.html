@@ -259,7 +259,7 @@
             </div>
         </form>
 
-        <div id="formStatus" class="status-message">Benvenuto! Seleziona i campi per procedere.</div>
+        <div id="formStatus" class="status-message">Pronto per la prenotazione.</div>
     </div>
 
     <script>
@@ -405,15 +405,18 @@
             }
         }
 
+        // Funzione Cloud protetta (se fallisce, non blocca MAI la pagina)
         async function fetchBookings() {
             try {
                 const response = await fetch(`https://api.jsonbin.io/v3/b/` + BIN_ID + `/latest`, {
                     headers: { 'X-Master-Key': MASTER_KEY }
                 });
-                const result = await response.json();
-                remoteData = result.record || { prenotazioni: {} };
+                if (response.ok) {
+                    const result = await response.json();
+                    remoteData = result.record || { prenotazioni: {} };
+                }
             } catch (error) {
-                console.error("Errore cloud:", error);
+                console.warn("Modalità offline attiva o errore di rete:", error);
             }
             aggiornaDashboardCorsi();
         }
@@ -467,7 +470,7 @@
             const nome = document.getElementById('nome').value;
             const cognome = document.getElementById('cognome').value;
 
-            if (!attivita || !giorno || !orario || !nome || !cognome) {
+9            if (!attivita || !giorno || !orario || !nome || !cognome) {
                 mostraStato('⚠️ Compila tutti i campi per disdire.', '#ff0000', '#220000', '#ff0000');
                 return;
             }
@@ -487,7 +490,8 @@
             setTimeout(() => { window.location.href = urlWhatsApp; }, 800);
         }
 
-        // Caricamento immediato della dashboard all'apertura della pagina
+        // Avvio immediato e sicuro della dashboard
+        aggiornaDashboardCorsi();
         fetchBookings();
     </script>
 </body>
