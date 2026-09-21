@@ -229,7 +229,7 @@
 
                 <div class="form-group">
                     <label for="attivita">Attività</label>
-                    <select id="attivita" name="attivita" required>
+                    <select id="attivita" name="attivita" required onchange="aggiornaGiorni()">
                         <option value="">Seleziona attività</option>
                         <option value="MMA">MMA</option>
                         <option value="Boxe">Boxe</option>
@@ -240,21 +240,21 @@
 
                 <div class="form-group">
                     <label for="giorno">Giorno</label>
-                    <select id="giorno" name="giorno" required>
+                    <select id="giorno" name="giorno" required onchange="aggiornaOrari()">
                         <option value="">Seleziona prima un'attività</option>
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label for="orario">Orario</label>
-                    <select id="orario" name="orario" required>
+                    <select id="orario" name="orario" required onchange="controllaSlot()">
                         <option value="">Seleziona prima un giorno</option>
                     </select>
                 </div>
 
                 <div class="form-group btn-container">
                     <button type="submit" id="submitBtn">PRENOTA</button>
-                    <button type="button" id="disdiciBtn" class="btn-disdici">DISDICI</button>
+                    <button type="button" id="disdiciBtn" class="btn-disdici" onclick="eseguiDisdetta()">DISDICI</button>
                 </div>
             </div>
         </form>
@@ -320,7 +320,7 @@
                 const result = await response.json();
                 remoteData = result.record || { prenotazioni: {} };
             } catch (error) {
-                console.error("Errore di caricamento dati cloud, uso memoria locale:", error);
+                console.error("Errore di caricamento dati cloud:", error);
             }
             aggiornaDashboardCorsi();
             controllaSlot();
@@ -451,24 +451,49 @@
             }
         }
 
+        async function eseguiDisdetta() {
+            const attivita = document.getElementById('attivita').value;
+            const giorno = document.getElementById('giorno').value;
+            const orario = document.getElementById('orario').value;
+            const nome = document.getElementById('nome').value;
+            const cognome = document.getElementById('cognome').value;
+
+            if (!attivita || !giorno || !orario || !nome || !cognome) {
+                mostraStato('⚠️ Per disdire, compila Nome, Cognome, Attività, Giorno e Orario.', '#ff0000', '#220000', '#ff0000');
+                return;
+            }
+
+            const chiaveSlot = getChiaveSlot(attivita, giorno, orario);
+            const attuali = getPostiOccupati(chiaveSlot);
+            if (attuali > 0) {
+                remoteData.prenotazioni[chiaveSlot] = attuali - 1;
+            }
+
+            mostraStato(`⏳ Registrazione disdetta...`, '#ff0000', '#000000', '#ff0000');
+            await saveBookings();
+            aggiornaDashboardCorsi();
+
+            const numeroCiro = "393281814024";
+            const testoMessaggio = `Ciao Ciro, vorrei disdire la mia prenotazione per il corso di ${attivita} di ${giorno} alle ${orario}. Nome: ${nome} ${cognome}`;
+
+            const urlWhatsApp = `https://wa.me/${numeroCiro}?text=${encodeURIComponent(testoMessaggio)}`;
+            
+            mostraStato(`🗑️ Posto liberato! Apertura WhatsApp...`, '#00ff00', '#002200', '#00ff00');
+            
+            setTimeout(() => {
+                window.location.href = urlWhatsApp;
+            }, 800);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            const attivitaSelect = document.getElementById('attivita');
-            const giornoSelect = document.getElementById('giorno');
-            const orarioSelect = document.getElementById('orario');
             const bookingForm = document.getElementById('bookingForm');
-            const disdiciBtn = document.getElementById('disdiciBtn');
 
-            attivitaSelect.addEventListener('change', aggiornaGiorni);
-            giornoSelect.addEventListener('change', aggiornaOrari);
-            orarioSelect.addEventListener('change', controllaSlot);
-
-            // Gestione Prenotazione
             bookingForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
-                const attivita = attivitaSelect.value;
-                const giorno = giornoSelect.value;
-                const orario = orarioSelect.value;
+                const attivita = document.getElementById('attivita').value;
+                const giorno = document.getElementById('giorno').value;
+                const orario = document.getElementById('orario').value;
                 const nome = document.getElementById('nome').value;
                 const cognome = document.getElementById('cognome').value;
                 
@@ -503,43 +528,6 @@
                 }, 800);
             });
 
-            // Gestione Disdetta
-            disdiciBtn.addEventListener('click', async () => {
-                const attivita = attivitaSelect.value;
-                const giorno = giornoSelect.value;
-                const orario = orarioSelect.value;
-                const nome = document.getElementById('nome').value;
-                const cognome = document.getElementById('cognome').value;
-
-                if (!attivita || !giorno || !orario || !nome || !cognome) {
-                    mostraStato('⚠️ Per disdire, compila Nome, Cognome, Attività, Giorno e Orario.', '#ff0000', '#220000', '#ff0000');
-                    return;
-                }
-
-                const chiaveSlot = getChiaveSlot(attivita, giorno, orario);
-                const attuali = getPostiOccupati(chiaveSlot);
-                if (attuali > 0) {
-                    remoteData.prenotazioni[chiaveSlot] = attuali - 1;
-                }
-
-                mostraStato(`⏳ Registrazione disdetta...`, '#ff0000', '#000000', '#ff0000');
-                await saveBookings();
-                aggiornaDashboardCorsi();
-
-                const numeroCiro = "393281814024";
-                const testoMessaggio = `Ciao Ciro, vorrei disdire la mia prenotazione per il corso di ${attivita} di ${giorno} alle ${orario}. Nome: ${nome} ${cognome}`;
-
-                const urlWhatsApp = `https://wa.me/${numeroCiro}?text=${encodeURIComponent(testoMessaggio)}`;
-                
-                mostraStato(`🗑️ Posto liberato! Apertura WhatsApp...`, '#00ff00', '#002200', '#00ff00');
-                
-                setTimeout(() => {
-                    window.location.href = urlWhatsApp;
-                }, 800);
-            });
-
-            // Avvio immediato e fluido in background
-            aggiornaDashboardCorsi();
             fetchBookings();
         });
     </script>
