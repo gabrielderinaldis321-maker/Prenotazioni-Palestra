@@ -229,7 +229,7 @@
 
                 <div class="form-group">
                     <label for="attivita">Attività</label>
-                    <select id="attivita" name="attivita" required>
+                    <select id="attivita" name="attivita" required onchange="aggiornaGiorni()">
                         <option value="">Seleziona attività</option>
                         <option value="MMA">MMA</option>
                         <option value="Boxe">Boxe</option>
@@ -240,21 +240,21 @@
 
                 <div class="form-group">
                     <label for="giorno">Giorno</label>
-                    <select id="giorno" name="giorno" required>
+                    <select id="giorno" name="giorno" required onchange="aggiornaOrari()">
                         <option value="">Seleziona prima un'attività</option>
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label for="orario">Orario</label>
-                    <select id="orario" name="orario" required>
+                    <select id="orario" name="orario" required onchange="controllaSlot()">
                         <option value="">Seleziona prima un giorno</option>
                     </select>
                 </div>
 
                 <div class="form-group btn-container">
                     <button type="submit" id="submitBtn">PRENOTA</button>
-                    <button type="button" id="disdiciBtn" class="btn-disdici">DISDICI</button>
+                    <button type="button" id="disdiciBtn" class="btn-disdici" onclick="eseguiDisdetta()">DISDICI</button>
                 </div>
             </div>
         </form>
@@ -367,93 +367,130 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        function aggiornaGiorni() {
             const attivitaSelect = document.getElementById('attivita');
             const giornoSelect = document.getElementById('giorno');
             const orarioSelect = document.getElementById('orario');
+            
+            const attivita = attivitaSelect.value;
+            giornoSelect.innerHTML = '<option value="">Seleziona giorno</option>';
+            orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
+            ripristinaCampi();
+            mostraStato("Seleziona giorno e orario per verificare la disponibilità.", "#ff0000", "#000000", "#ff0000");
+
+            if (attivita && orariDisponibili[attivita]) {
+                orariDisponibili[attivita].giorni.forEach(giorno => {
+                    const opt = document.createElement('option');
+                    opt.value = giorno;
+                    opt.textContent = giorno;
+                    giornoSelect.appendChild(opt);
+                });
+            }
+        }
+
+        function aggiornaOrari() {
+            const attivitaSelect = document.getElementById('attivita');
+            const giornoSelect = document.getElementById('giorno');
+            const orarioSelect = document.getElementById('orario');
+
+            const attivita = attivitaSelect.value;
+            const giorno = giornoSelect.value;
+            orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
+            ripristinaCampi();
+            mostraStato("Seleziona l'orario per procedere.", "#ff0000", "#000000", "#ff0000");
+
+            if (attivita && giorno && orariDisponibili[attivita]) {
+                orariDisponibili[attivita].orari.forEach(orario => {
+                    const opt = document.createElement('option');
+                    opt.value = orario;
+                    opt.textContent = orario;
+                    orarioSelect.appendChild(opt);
+                });
+            }
+        }
+
+        function ripristinaCampi() {
             const nomeInput = document.getElementById('nome');
             const cognomeInput = document.getElementById('cognome');
             const submitBtn = document.getElementById('submitBtn');
-            const disdiciBtn = document.getElementById('disdiciBtn');
+
+            nomeInput.disabled = false;
+            cognomeInput.disabled = false;
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'PRENOTA';
+        }
+
+        function controllaSlot() {
+            const attivita = document.getElementById('attivita').value;
+            const giorno = document.getElementById('giorno').value;
+            const orario = document.getElementById('orario').value;
+            const nomeInput = document.getElementById('nome');
+            const cognomeInput = document.getElementById('cognome');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (attivita && giorno && orario) {
+                const chiaveSlot = getChiaveSlot(attivita, giorno, orario);
+                const postiOccupati = getPostiOccupati(chiaveSlot);
+
+                if (postiOccupati >= 6) {
+                    mostraStato('⛔ SUPERAMENTO LIMITE MASSIMO: Questo corso è al completo (6/6 posti esauriti).', '#ff0000', '#220000', '#ff0000');
+                    nomeInput.disabled = true;
+                    cognomeInput.disabled = true;
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'CORSO ESAURITO';
+                } else {
+                    const rimanenti = 6 - postiOccupati;
+                    mostraStato(`ℹ️ Posti occupati: ${postiOccupati}/6 (Disponibili: ${rimanenti})`, '#00ff00', '#002200', '#00ff00');
+                    ripristinaCampi();
+                }
+            }
+        }
+
+        async function eseguiDisdetta() {
+            const attivita = document.getElementById('attivita').value;
+            const giorno = document.getElementById('giorno').value;
+            const orario = document.getElementById('orario').value;
+            const nome = document.getElementById('nome').value;
+            const cognome = document.getElementById('cognome').value;
+
+            if (!attivita || !giorno || !orario || !nome || !cognome) {
+                mostraStato('⚠️ Per disdire, compila Nome, Cognome, Attività, Giorno e Orario.', '#ff0000', '#220000', '#ff0000');
+                return;
+            }
+
+            const chiaveSlot = getChiaveSlot(attivita, giorno, orario);
+            const attuali = getPostiOccupati(chiaveSlot);
+            if (attuali > 0) {
+                remoteData.prenotazioni[chiaveSlot] = attuali - 1;
+            }
+
+            mostraStato(`⏳ Registrazione disdetta...`, '#ff0000', '#000000', '#ff0000');
+            await saveBookings();
+            aggiornaDashboardCorsi();
+
+            const numeroCiro = "393281814024";
+            const testoMessaggio = `Ciao Ciro, vorrei disdire la mia prenotazione per il corso di ${attivita} di ${giorno} alle ${orario}. Nome: ${nome} ${cognome}`;
+
+            const urlWhatsApp = `https://wa.me/${numeroCiro}?text=${encodeURIComponent(testoMessaggio)}`;
+            
+            mostraStato(`🗑️ Posto liberato! Apertura WhatsApp...`, '#00ff00', '#002200', '#00ff00');
+            
+            setTimeout(() => {
+                window.location.href = urlWhatsApp;
+            }, 800);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
             const bookingForm = document.getElementById('bookingForm');
 
-            function aggiornaGiorni() {
-                const attivita = attivitaSelect.value;
-                giornoSelect.innerHTML = '<option value="">Seleziona giorno</option>';
-                orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
-                ripristinaCampi();
-                mostraStato("Seleziona giorno e orario per verificare la disponibilità.", "#ff0000", "#000000", "#ff0000");
-
-                if (attivita && orariDisponibili[attivita]) {
-                    orariDisponibili[attivita].giorni.forEach(giorno => {
-                        const opt = document.createElement('option');
-                        opt.value = giorno;
-                        opt.textContent = giorno;
-                        giornoSelect.appendChild(opt);
-                    });
-                }
-            }
-
-            function aggiornaOrari() {
-                const attivita = attivitaSelect.value;
-                const giorno = giornoSelect.value;
-                orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
-                ripristinaCampi();
-                mostraStato("Seleziona l'orario per procedere.", "#ff0000", "#000000", "#ff0000");
-
-                if (attivita && giorno && orariDisponibili[attivita]) {
-                    orariDisponibili[attivita].orari.forEach(orario => {
-                        const opt = document.createElement('option');
-                        opt.value = orario;
-                        opt.textContent = orario;
-                        orarioSelect.appendChild(opt);
-                    });
-                }
-            }
-
-            function ripristinaCampi() {
-                nomeInput.disabled = false;
-                cognomeInput.disabled = false;
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'PRENOTA';
-            }
-
-            function controllaSlot() {
-                const attivita = attivitaSelect.value;
-                const giorno = giornoSelect.value;
-                const orario = orarioSelect.value;
-
-                if (attivita && giorno && orario) {
-                    const chiaveSlot = getChiaveSlot(attivita, giorno, orario);
-                    const postiOccupati = getPostiOccupati(chiaveSlot);
-
-                    if (postiOccupati >= 6) {
-                        mostraStato('⛔ SUPERAMENTO LIMITE MASSIMO: Questo corso è al completo (6/6 posti esauriti).', '#ff0000', '#220000', '#ff0000');
-                        nomeInput.disabled = true;
-                        cognomeInput.disabled = true;
-                        submitBtn.disabled = true;
-                        submitBtn.textContent = 'CORSO ESAURITO';
-                    } else {
-                        const rimanenti = 6 - postiOccupati;
-                        mostraStato(`ℹ️ Posti occupati: ${postiOccupati}/6 (Disponibili: ${rimanenti})`, '#00ff00', '#002200', '#00ff00');
-                        ripristinaCampi();
-                    }
-                }
-            }
-
-            attivitaSelect.addEventListener('change', aggiornaGiorni);
-            giornoSelect.addEventListener('change', aggiornaOrari);
-            orarioSelect.addEventListener('change', controllaSlot);
-
-            // Gestione Prenotazione
             bookingForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
-                const attivita = attivitaSelect.value;
-                const giorno = giornoSelect.value;
-                const orario = orarioSelect.value;
-                const nome = nomeInput.value;
-                const cognome = cognomeInput.value;
+                const attivita = document.getElementById('attivita').value;
+                const giorno = document.getElementById('giorno').value;
+                const orario = document.getElementById('orario').value;
+                const nome = document.getElementById('nome').value;
+                const cognome = document.getElementById('cognome').value;
                 
                 const chiaveSlot = getChiaveSlot(attivita, giorno, orario);
                 const postiOccupati = getPostiOccupati(chiaveSlot);
@@ -466,7 +503,7 @@
                 if (!remoteData.prenotazioni) remoteData.prenotazioni = {};
                 remoteData.prenotazioni[chiaveSlot] = postiOccupati + 1;
 
-                mostraStato(`⏳ Salvataggio prenotazione in corso...`, '#ff0000', '#000000', '#ff0000');
+                mostraStato(`⏳ Salvataggio in corso...`, '#ff0000', '#000000', '#ff0000');
                 await saveBookings();
                 aggiornaDashboardCorsi();
 
@@ -480,41 +517,6 @@
                 const urlWhatsApp = `https://wa.me/${numeroCiro}?text=${testoMessaggio}`;
                 
                 mostraStato(`✅ Prenotazione registrata! Apertura WhatsApp...`, '#00ff00', '#002200', '#00ff00');
-                
-                setTimeout(() => {
-                    window.location.href = urlWhatsApp;
-                }, 800);
-            });
-
-            // Gestione Disdetta
-            disdiciBtn.addEventListener('click', async () => {
-                const attivita = attivitaSelect.value;
-                const giorno = giornoSelect.value;
-                const orario = orarioSelect.value;
-                const nome = nomeInput.value;
-                const cognome = cognomeInput.value;
-
-                if (!attivita || !giorno || !orario || !nome || !cognome) {
-                    mostraStato('⚠️ Per disdire, compila Nome, Cognome, Attività, Giorno e Orario.', '#ff0000', '#220000', '#ff0000');
-                    return;
-                }
-
-                const chiaveSlot = getChiaveSlot(attivita, giorno, orario);
-                const attuali = getPostiOccupati(chiaveSlot);
-                if (attuali > 0) {
-                    remoteData.prenotazioni[chiaveSlot] = attuali - 1;
-                }
-
-                mostraStato(`⏳ Registrazione disdetta in corso...`, '#ff0000', '#000000', '#ff0000');
-                await saveBookings();
-                aggiornaDashboardCorsi();
-
-                const numeroCiro = "393281814024";
-                const testoMessaggio = `Ciao Ciro, vorrei disdire la mia prenotazione per il corso di ${attivita} di ${giorno} alle ${orario}. Nome: ${nome} ${cognome}`;
-
-                const urlWhatsApp = `https://wa.me/${numeroCiro}?text=${encodeURIComponent(testoMessaggio)}`;
-                
-                mostraStato(`🗑️ Posto liberato! Apertura WhatsApp per la disdetta...`, '#00ff00', '#002200', '#00ff00');
                 
                 setTimeout(() => {
                     window.location.href = urlWhatsApp;
