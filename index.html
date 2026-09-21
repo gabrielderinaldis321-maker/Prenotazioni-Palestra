@@ -221,12 +221,12 @@
 
     <script>
         // --- CONFIGURAZIONE GITHUB ---
-        const GITHUB_USER = 'gabrielderinaldis321-maker';
-        const GITHUB_REPO = 'Prenotazioni-Palestra';
+        const GITHUB_USER = 'gabrielderinaldis321-maker';[cite: 4]
+        const GITHUB_REPO = 'Prenotazioni-Palestra';[cite: 1]
         const GITHUB_TOKEN = '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';
         // -----------------------------
 
-        let remoteData = { prenotazioni: {} };
+        let remoteData = { settimanaCorrente: "", prenotazioni: {} };
         let fileSha = '';
 
         const orariDisponibili = {
@@ -245,7 +245,7 @@
         }
 
         function getChiave(a, g, o) {
-            return `${getSettimana()}_${a}_${g}_${o}`;
+            return `${a}_${g}_${o}`;
         }
 
         function mostraStato(testo, colore) {
@@ -271,6 +271,15 @@
             } catch(e) {
                 console.log("Errore lettura dati da GitHub", e);
             }
+
+            // CONTROLLO RESET SETTIMANALE AUTOMATICO
+            const settimanaAttuale = getSettimana();
+            if(!remoteData.settimanaCorrente || remoteData.settimanaCorrente !== settimanaAttuale) {
+                remoteData.settimanaCorrente = settimanaAttuale;
+                remoteData.prenotazioni = {};
+                await salvaDatiSuGitHub(); // Pulisce e resetta in automatico sul server
+            }
+
             aggiornaDashboard();
             controllaSlot();
         }
@@ -287,7 +296,7 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        message: "Aggiornamento prenotazioni Steel Life",
+                        message: "Aggiornamento/Reset automatico prenotazioni Steel Life",
                         content: contentEncoded,
                         sha: fileSha
                     })
