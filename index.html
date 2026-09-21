@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Steel Life - Prenotazione e Disdetta Corsi</title>
+    <title>Steel Life - Prenotazione Corsi</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,7 +16,6 @@
             min-height: 100vh;
             color: #ff0000;
         }
-
         .container {
             background: #050000;
             padding: 25px;
@@ -27,7 +26,6 @@
             box-sizing: border-box;
             border: 2px solid #ff0000;
         }
-
         .brand-title {
             color: #ff0000;
             font-size: 32px;
@@ -37,7 +35,6 @@
             margin: 0 0 5px 0;
             text-align: center;
         }
-
         h1 {
             margin-top: 0;
             color: #ff0000;
@@ -45,14 +42,12 @@
             text-align: center;
             margin-bottom: 5px;
         }
-
         .subtitle {
             color: #cc0000;
             margin-bottom: 20px;
             font-size: 13px;
             text-align: center;
         }
-
         .dashboard-corsi {
             background: #100000;
             border: 1px solid #ff0000;
@@ -60,7 +55,6 @@
             padding: 12px;
             margin-bottom: 20px;
         }
-
         .dashboard-title {
             font-size: 13px;
             font-weight: bold;
@@ -70,7 +64,6 @@
             text-align: center;
             letter-spacing: 1px;
         }
-
         .slot-grid {
             display: flex;
             flex-direction: column;
@@ -78,7 +71,6 @@
             max-height: 160px;
             overflow-y: auto;
         }
-
         .slot-item {
             display: flex;
             justify-content: space-between;
@@ -89,31 +81,26 @@
             border: 1px solid #330000;
             color: #ff0000;
         }
-
         .slot-item.esaurito {
             border-color: #ff0000;
             background: #1a0000;
             color: #ff4d4d;
         }
-
         .form-grid {
             display: flex;
             flex-direction: column;
             gap: 12px;
         }
-
         .form-group {
             display: flex;
             flex-direction: column;
         }
-
         label {
             font-weight: bold;
             margin-bottom: 4px;
             font-size: 13px;
             color: #ff0000;
         }
-
         input, select {
             padding: 10px;
             border: 1px solid #ff0000;
@@ -124,30 +111,20 @@
             width: 100%;
             box-sizing: border-box;
         }
-
         input::placeholder {
             color: #880000;
         }
-
         input:disabled, select:disabled {
             background-color: #1a0000;
             color: #550000;
             border-color: #550000;
             cursor: not-allowed;
         }
-
-        input:focus, select:focus {
-            border-color: #ff3333;
-            outline: none;
-            box-shadow: 0 0 8px rgba(255, 0, 0, 0.6);
-        }
-
         .btn-container {
             display: flex;
             gap: 10px;
             margin-top: 5px;
         }
-
         button {
             background-color: #ff0000;
             color: #000000;
@@ -158,38 +135,13 @@
             border-radius: 4px;
             cursor: pointer;
             width: 100%;
-            transition: all 0.3s;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-
         button.btn-disdici {
             background-color: #000000;
             color: #ff0000;
-            border: 2px solid #ff0000;
         }
-
-        button.btn-disdici:hover:not(:disabled) {
-            background-color: #ff0000;
-            color: #000000;
-        }
-
-        button:hover:not(:disabled) {
-            background-color: #000000;
-            color: #ff0000;
-        }
-
-        button:active:not(:disabled) {
-            transform: scale(0.98);
-        }
-
-        button:disabled {
-            background-color: #330000;
-            color: #550000;
-            border-color: #330000;
-            cursor: not-allowed;
-        }
-
         .status-message {
             margin-top: 15px;
             font-weight: bold;
@@ -209,7 +161,6 @@
         <h1>🏋️ Prenota o Disdici Corso</h1>
         <p class="subtitle">Seleziona attività, giorno e orario (Max 6 persone per slot)</p>
 
-        <!-- Riepilogo in tempo reale dei corsi della settimana -->
         <div class="dashboard-corsi">
             <div class="dashboard-title">📊 Stato Corsi di questa Settimana</div>
             <div id="listaStatoCorsi" class="slot-grid"></div>
@@ -229,7 +180,7 @@
 
                 <div class="form-group">
                     <label for="attivita">Attività</label>
-                    <select id="attivita" name="attivita" required onchange="gestisciAttivita()">
+                    <select id="attivita" name="attivita" required onchange="cambiaAttivita()">
                         <option value="">Seleziona attività</option>
                         <option value="MMA">MMA</option>
                         <option value="Boxe">Boxe</option>
@@ -240,7 +191,7 @@
 
                 <div class="form-group">
                     <label for="giorno">Giorno</label>
-                    <select id="giorno" name="giorno" required onchange="gestisciGiorno()">
+                    <select id="giorno" name="giorno" required onchange="cambiaGiorno()">
                         <option value="">Seleziona prima un'attività</option>
                     </select>
                 </div>
@@ -263,235 +214,175 @@
     </div>
 
     <script>
-        // --- CONFIGURAZIONE JSONBIN.IO ---
         const BIN_ID = '6ab1a2cfffd51605320c12e';[cite: 2]
         const MASTER_KEY = '$2a$10$STsCYyAaMcKn0BiVzSxaM.ZhYtmH058eoAaQieLBr7y.oMeOSoq8C';
-        // ---------------------------------
-
         let remoteData = { prenotazioni: {} };
 
         const orariDisponibili = {
-            "MMA": {
-                giorni: ["Lunedì", "Mercoledì", "Venerdì"],
-                orari: ["18:00 - 19:00", "19:00 - 20:00", "20:00 - 21:00"]
-            },
-            "Boxe": {
-                giorni: ["Martedì", "Giovedì"],
-                orari: ["18:00 - 19:00"]
-            },
-            "Kickboxing": {
-                giorni: ["Martedì", "Giovedì"],
-                orari: ["19:00 - 20:00"]
-            },
-            "BJJ": {
-                giorni: ["Martedì", "Giovedì"],
-                orari: ["20:00 - 21:00"]
-            }
+            "MMA": { giorni: ["Lunedì", "Mercoledì", "Venerdì"], orari: ["18:00 - 19:00", "19:00 - 20:00", "20:00 - 21:00"] },
+            "Boxe": { giorni: ["Martedì", "Giovedì"], orari: ["18:00 - 19:00"] },
+            "Kickboxing": { giorni: ["Martedì", "Giovedì"], orari: ["19:00 - 20:00"] },
+            "BJJ": { giorni: ["Martedì", "Giovedì"], orari: ["20:00 - 21:00"] }
         };
 
-        function getNumeroSettimanaCorrente() {
+        function getSettimana() {
             const d = new Date();
             d.setHours(0, 0, 0, 0);
             d.setDate(d.getDate() + 4 - (d.getDay() || 7));
-            const annoInizio = new Date(d.getFullYear(), 0, 1);
-            return `${d.getFullYear()}-W${Math.ceil((((d - annoInizio) / 86400000) + 1) / 7)}`;
+            const inizio = new Date(d.getFullYear(), 0, 1);
+            return `${d.getFullYear()}-W${Math.ceil((((d - inizio) / 86400000) + 1) / 7)}`;
         }
 
-        function getChiaveSlot(attivita, giorno, orario) {
-            return `${getNumeroSettimanaCorrente()}_${attivita}_${giorno}_${orario}`;
+        function getChiave(a, g, o) {
+            return `${getSettimana()}_${a}_${g}_${o}`;
         }
 
-        function mostraStato(messaggio, coloreTesto, coloreSfondo, coloreBordo) {
-            const formStatus = document.getElementById('formStatus');
-            if (!formStatus) return;
-            formStatus.textContent = messaggio;
-            formStatus.style.color = coloreTesto;
-            formStatus.style.backgroundColor = coloreSfondo;
-            formStatus.style.borderColor = coloreBordo;
+        function mostraStato(testo, colore) {
+            const st = document.getElementById('formStatus');
+            if(st) {
+                st.textContent = testo;
+                st.style.color = colore;
+            }
         }
 
-        function getPostiOccupati(chiaveSlot) {
-            return remoteData.prenotazioni && remoteData.prenotazioni[chiaveSlot] ? remoteData.prenotazioni[chiaveSlot] : 0;
-        }
-
-        function aggiornaDashboardCorsi() {
-            const listaStatoCorsi = document.getElementById('listaStatoCorsi');
-            if (!listaStatoCorsi) return;
-            listaStatoCorsi.innerHTML = '';
-            
-            for (const [nomeAttivita, dati] of Object.entries(orariDisponibili)) {
-                dati.giorni.forEach(giorno => {
-                    dati.orari.forEach(orario => {
-                        const chiave = getChiaveSlot(nomeAttivita, giorno, orario);
-                        const posti = getPostiOccupati(chiave);
-                        
+        function aggiornaDashboard() {
+            const lista = document.getElementById('listaStatoCorsi');
+            if(!lista) return;
+            lista.innerHTML = '';
+            for (const [att, dati] of Object.entries(orariDisponibili)) {
+                dati.giorni.forEach(g => {
+                    dati.orari.forEach(o => {
+                        const chiave = getChiave(att, g, o);
+                        const posti = remoteData.prenotazioni && remoteData.prenotazioni[chiave] ? remoteData.prenotazioni[chiave] : 0;
                         const div = document.createElement('div');
                         div.className = `slot-item ${posti >= 6 ? 'esaurito' : ''}`;
-                        div.innerHTML = `<span><b>${nomeAttivita}</b> (${giorno} - ${orario})</span> <span>${posti >= 6 ? 'ESAURITO (6/6)' : `${posti}/6 posti`}</span>`;
-                        listaStatoCorsi.appendChild(div);
+                        div.innerHTML = `<span><b>${att}</b> (${g} - ${o})</span> <span>${posti >= 6 ? 'ESAURITO (6/6)' : `${posti}/6 posti`}</span>`;
+                        lista.appendChild(div);
                     });
                 });
             }
         }
 
-        function gestisciAttivita() {
-            const attivita = document.getElementById('attivita').value;
-            const giornoSelect = document.getElementById('giorno');
-            const orarioSelect = document.getElementById('orario');
-            
-            giornoSelect.innerHTML = '<option value="">Seleziona giorno</option>';
-            orarioSelect.innerHTML = '<option value="">Seleziona prima un giorno</option>';
-            
-            document.getElementById('nome').disabled = false;
-            document.getElementById('cognome').disabled = false;
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'PRENOTA';
-
-            if (attivita && orariDisponibili[attivita]) {
-                orariDisponibili[attivita].giorni.forEach(giorno => {
+        function cambiaAttivita() {
+            const att = document.getElementById('attivita').value;
+            const gSelect = document.getElementById('giorno');
+            const oSelect = document.getElementById('orario');
+            gSelect.innerHTML = '<option value="">Seleziona giorno</option>';
+            oSelect.innerHTML = '<option value="">Seleziona prima un giorno</option>';
+            if(att && orariDisponibili[att]) {
+                orariDisponibili[att].giorni.forEach(g => {
                     const opt = document.createElement('option');
-                    opt.value = giorno;
-                    opt.textContent = giorno;
-                    giornoSelect.appendChild(opt);
+                    opt.value = g; opt.textContent = g;
+                    gSelect.appendChild(opt);
                 });
             }
-            mostraStato("Seleziona giorno e orario.", "#ff0000", "#000000", "#ff0000");
+            mostraStato("Seleziona giorno e orario.", "#ff0000");
         }
 
-        function gestisciGiorno() {
-            const attivita = document.getElementById('attivita').value;
-            const giorno = document.getElementById('giorno').value;
-            const orarioSelect = document.getElementById('orario');
-            
-            orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
-
-            if (attivita && giorno && orariDisponibili[attivita]) {
-                orariDisponibili[attivita].orari.forEach(orario => {
+        function cambiaGiorno() {
+            const att = document.getElementById('attivita').value;
+            const g = document.getElementById('giorno').value;
+            const oSelect = document.getElementById('orario');
+            oSelect.innerHTML = '<option value="">Seleziona orario</option>';
+            if(att && g && orariDisponibili[att]) {
+                orariDisponibili[att].orari.forEach(o => {
                     const opt = document.createElement('option');
-                    opt.value = orario;
-                    opt.textContent = orario;
-                    orarioSelect.appendChild(opt);
+                    opt.value = o; opt.textContent = o;
+                    oSelect.appendChild(opt);
                 });
             }
-            mostraStato("Seleziona l'orario.", "#ff0000", "#000000", "#ff0000");
+            mostraStato("Seleziona l'orario.", "#ff0000");
         }
 
         function controllaSlot() {
-            const attivita = document.getElementById('attivita').value;
-            const giorno = document.getElementById('giorno').value;
-            const orario = document.getElementById('orario').value;
-            const nomeInput = document.getElementById('nome');
-            const cognomeInput = document.getElementById('cognome');
-            const submitBtn = document.getElementById('submitBtn');
-
-            if (attivita && giorno && orario) {
-                const chiaveSlot = getChiaveSlot(attivita, giorno, orario);
-                const postiOccupati = getPostiOccupati(chiaveSlot);
-
-                if (postiOccupati >= 6) {
-                    mostraStato('⛔ CORSO AL COMPLETO (6/6 posti esauriti).', '#ff0000', '#220000', '#ff0000');
-                    nomeInput.disabled = true;
-                    cognomeInput.disabled = true;
-                    submitBtn.disabled = true;
-                    submitBtn.textContent = 'CORSO ESAURITO';
+            const att = document.getElementById('attivita').value;
+            const g = document.getElementById('giorno').value;
+            const o = document.getElementById('orario').value;
+            if(att && g && o) {
+                const posti = remoteData.prenotazioni && remoteData.prenotazioni[getChiave(att, g, o)] ? remoteData.prenotazioni[getChiave(att, g, o)] : 0;
+                if(posti >= 6) {
+                    mostraStato("⛔ CORSO AL COMPLETO (6/6).", "#ff0000");
                 } else {
-                    mostraStato(`ℹ️ Posti occupati: ${postiOccupati}/6 (Disponibili: ${6 - postiOccupati})`, '#00ff00', '#002200', '#00ff00');
-                    nomeInput.disabled = false;
-                    cognomeInput.disabled = false;
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'PRENOTA';
+                    mostraStato(`ℹ️ Posti occupati: ${posti}/6 (Disponibili: ${6 - posti})`, "#00ff00");
                 }
             }
         }
 
-        async function fetchBookings() {
+        async function scaricaDati() {
             try {
-                const response = await fetch(`https://api.jsonbin.io/v3/b/` + BIN_ID + `/latest`, {
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
                     headers: { 'X-Master-Key': MASTER_KEY }
                 });
-                if (response.ok) {
-                    const result = await response.json();
-                    remoteData = result.record || { prenotazioni: {} };
+                if(res.ok) {
+                    const json = await res.json();
+                    remoteData = json.record || { prenotazioni: {} };
                 }
-            } catch (error) {
-                console.warn("Modalità offline attiva:", error);
-            }
-            aggiornaDashboardCorsi();
+            } catch(e) { console.log("Offline"); }
+            aggiornaDashboard();
         }
 
-        async function saveBookings() {
+        async function salvaDati() {
             try {
-                await fetch(`https://api.jsonbin.io/v3/b/` + BIN_ID, {
+                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': MASTER_KEY
-                    },
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
                     body: JSON.stringify(remoteData)
                 });
-            } catch (error) {
-                console.error("Errore salvataggio:", error);
-            }
+            } catch(e) { console.log("Errore salvataggio"); }
         }
 
-        async function eseguiPrenotazione(event) {
-            event.preventDefault();
-            const attivita = document.getElementById('attivita').value;
-            const giorno = document.getElementById('giorno').value;
-            const orario = document.getElementById('orario').value;
+        async function eseguiPrenotazione(e) {
+            e.preventDefault();
+            const att = document.getElementById('attivita').value;
+            const g = document.getElementById('giorno').value;
+            const o = document.getElementById('orario').value;
             const nome = document.getElementById('nome').value;
             const cognome = document.getElementById('cognome').value;
+            const chiave = getChiave(att, g, o);
             
-            const chiaveSlot = getChiaveSlot(attivita, giorno, orario);
-            if (getPostiOccupati(chiaveSlot) >= 6) {
-                mostraStato('❌ Posti esauriti!', '#ff0000', '#220000', '#ff0000');
+            await scaricaDati();
+            const posti = remoteData.prenotazioni && remoteData.prenotazioni[chiave] ? remoteData.prenotazioni[chiave] : 0;
+            if(posti >= 6) {
+                mostraStato("❌ Spiacenti, corso esaurito!", "#ff0000");
                 return;
             }
             
-            if (!remoteData.prenotazioni) remoteData.prenotazioni = {};
-            remoteData.prenotazioni[chiaveSlot] = getPostiOccupati(chiaveSlot) + 1;
+            if(!remoteData.prenotazioni) remoteData.prenotazioni = {};
+            remoteData.prenotazioni[chiave] = posti + 1;
+            mostraStato("⏳ Salvataggio in corso...", "#ff0000");
+            await salvaDati();
+            aggiornaDashboard();
 
-            mostraStato('⏳ Salvataggio in corso...', '#ff0000', '#000000', '#ff0000');
-            await saveBookings();
-            aggiornaDashboardCorsi();
-
-            const urlWhatsApp = `https://wa.me/393281814024?text=${encodeURIComponent(`🏋️ *Nuova Prenotazione - Steel Life*\n👤 *Nome:* ${nome} ${cognome}\n🥊 *Attività:* ${attivita}\n📅 *Giorno:* ${giorno}\n⏰ *Orario:*${orario}`)}`;
-            
-            mostraStato('✅ Registrato! Apertura WhatsApp...', '#00ff00', '#002200', '#00ff00');
-            setTimeout(() => { window.location.href = urlWhatsApp; }, 800);
+            const url = `https://wa.me/393281814024?text=${encodeURIComponent(`🏋️ *Nuova Prenotazione - Steel Life*\n👤 *Nome:* ${nome} ${cognome}\n🥊 *Attività:* ${att}\n📅 *Giorno:* ${g}\n⏰ *Orario:*${o}`)}`;
+            mostraStato("✅ Apertura WhatsApp...", "#00ff00");
+            setTimeout(() => { window.location.href = url; }, 800);
         }
 
         async function eseguiDisdetta() {
-            const attivita = document.getElementById('attivita').value;
-            const giorno = document.getElementById('giorno').value;
-            const orario = document.getElementById('orario').value;
+            const att = document.getElementById('attivita').value;
+            const g = document.getElementById('giorno').value;
+            const o = document.getElementById('orario').value;
             const nome = document.getElementById('nome').value;
             const cognome = document.getElementById('cognome').value;
-
-            if (!attivita || !giorno || !orario || !nome || !cognome) {
-                mostraStato('⚠️ Compila tutti i campi per disdire.', '#ff0000', '#220000', '#ff0000');
+            if(!att || !g || !o || !nome || !cognome) {
+                mostraStato("⚠️ Compila tutti i campi per disdire.", "#ff0000");
                 return;
             }
-
-            const chiaveSlot = getChiaveSlot(attivita, giorno, orario);
-            if (getPostiOccupati(chiaveSlot) > 0) {
-                remoteData.prenotazioni[chiaveSlot] = getPostiOccupati(chiaveSlot) - 1;
-            }
-
-            mostraStato('⏳ Disdetta in corso...', '#ff0000', '#000000', '#ff0000');
-            await saveBookings();
-            aggiornaDashboardCorsi();
-
-            const urlWhatsApp = `https://wa.me/393281814024?text=${encodeURIComponent(`Ciao Ciro, vorrei disdire la mia prenotazione per il corso di ${attivita} di ${giorno} alle${orario}. Nome: ${nome}${cognome}`)}`;
+            const chiave = getChiave(att, g, o);
+            await scaricaDati();
+            const posti = remoteData.prenotazioni && remoteData.prenotazioni[chiave] ? remoteData.prenotazioni[chiave] : 0;
+            if(posti > 0) remoteData.prenotazioni[chiave] = posti - 1;
             
-            mostraStato('🗑️ Liberato! Apertura WhatsApp...', '#00ff00', '#002200', '#00ff00');
-            setTimeout(() => { window.location.href = urlWhatsApp; }, 800);
+            mostraStato("⏳ Disdetta in corso...", "#ff0000");
+            await salvaDati();
+            aggiornaDashboard();
+
+            const url = `https://wa.me/393281814024?text=${encodeURIComponent(`Ciao Ciro, vorrei disdire la mia prenotazione per il corso di ${att} di ${g} alle${o}. Nome: ${nome}${cognome}`)}`;
+            mostraStato("🗑️ Apertura WhatsApp...", "#00ff00");
+            setTimeout(() => { window.location.href = url; }, 800);
         }
 
-        // Avvio immediato
-        aggiornaDashboardCorsi();
-        fetchBookings();
+        scaricaDati();
     </script>
 </body>
 </html>
