@@ -218,11 +218,24 @@
         const MASTER_KEY = '$2a$10$STsCYyAaMcKn0BiVzSxaM.ZhYtmH058eoAaQieLBr7y.oMeOSoq8C';
         let remoteData = { prenotazioni: {} };
 
+        // Programmazione esatta corsi Steel Life
         const orariDisponibili = {
-            "MMA": { giorni: ["Lunedì", "Mercoledì", "Venerdì"], orari: ["18:00 - 19:00", "19:00 - 20:00", "20:00 - 21:00"] },
-            "Boxe": { giorni: ["Martedì", "Giovedì"], orari: ["18:00 - 19:00"] },
-            "Kickboxing": { giorni: ["Martedì", "Giovedì"], orari: ["19:00 - 20:00"] },
-            "BJJ": { giorni: ["Martedì", "Giovedì"], orari: ["20:00 - 21:00"] }
+            "MMA": { 
+                giorni: ["Lunedì", "Mercoledì", "Venerdì"], 
+                orari: ["18:00 - 19:00", "19:00 - 20:00", "20:00 - 21:00"] 
+            },
+            "Boxe": { 
+                giorni: ["Martedì", "Giovedì"], 
+                orari: ["18:00 - 19:00"] 
+            },
+            "Kickboxing": { 
+                giorni: ["Martedì", "Giovedì"], 
+                orari: ["19:00 - 20:00"] 
+            },
+            "BJJ": { 
+                giorni: ["Martedì", "Giovedì"], 
+                orari: ["20:00 - 21:00"] 
+            }
         };
 
         function getSettimana() {
@@ -353,7 +366,8 @@
             await salvaDati();
             aggiornaDashboard();
 
-            const url = `https://wa.me/393281814024?text=${encodeURIComponent(`🏋️ *Nuova Prenotazione - Steel Life*\n👤 *Nome:* ${nome} ${cognome}\n🥊 *Attività:* ${att}\n📅 *Giorno:* ${g}\n⏰ *Orario:*${o}`)}`;
+            const numeroCiro = "393281814024";
+            const url = `https://wa.me/${numeroCiro}?text=${encodeURIComponent(`🏋️ *Nuova Prenotazione - Steel Life*\n👤 *Nome:* ${nome} ${cognome}\n🥊 *Attività:* ${att}\n📅 *Giorno:* ${g}\n⏰ *Orario:*${o}`)}`;
             mostraStato("✅ Apertura WhatsApp...", "#00ff00");
             setTimeout(() => { window.location.href = url; }, 800);
         }
@@ -377,7 +391,8 @@
             await salvaDati();
             aggiornaDashboard();
 
-            const url = `https://wa.me/393281814024?text=${encodeURIComponent(`Ciao Ciro, vorrei disdire la mia prenotazione per il corso di ${att} di ${g} alle${o}. Nome: ${nome}${cognome}`)}`;
+            const numeroCiro = "393281814024";
+            const url = `https://wa.me/${numeroCiro}?text=${encodeURIComponent(`Ciao Ciro, vorrei disdire la mia prenotazione per il corso di ${att} di ${g} alle${o}. Nome: ${nome}${cognome}`)}`;
             mostraStato("🗑️ Apertura WhatsApp...", "#00ff00");
             setTimeout(() => { window.location.href = url; }, 800);
         }
