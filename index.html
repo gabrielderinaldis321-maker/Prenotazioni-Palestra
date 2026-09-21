@@ -320,7 +320,7 @@
                 const result = await response.json();
                 remoteData = result.record || { prenotazioni: {} };
             } catch (error) {
-                console.error("Errore di caricamento dati:", error);
+                console.error("Errore di caricamento dati cloud, uso memoria locale:", error);
             }
             aggiornaDashboardCorsi();
             controllaSlot();
@@ -337,7 +337,7 @@
                     body: JSON.stringify(remoteData)
                 });
             } catch (error) {
-                console.error("Errore di salvataggio dati:", error);
+                console.error("Errore di salvataggio dati cloud:", error);
             }
         }
 
@@ -472,7 +472,6 @@
                 const nome = document.getElementById('nome').value;
                 const cognome = document.getElementById('cognome').value;
                 
-                await fetchBookings();
                 const chiaveSlot = getChiaveSlot(attivita, giorno, orario);
                 const postiOccupati = getPostiOccupati(chiaveSlot);
 
@@ -484,7 +483,7 @@
                 if (!remoteData.prenotazioni) remoteData.prenotazioni = {};
                 remoteData.prenotazioni[chiaveSlot] = postiOccupati + 1;
 
-                mostraStato(`⏳ Salvataggio prenotazione in corso...`, '#ff0000', '#000000', '#ff0000');
+                mostraStato(`⏳ Salvataggio in corso...`, '#ff0000', '#000000', '#ff0000');
                 await saveBookings();
                 aggiornaDashboardCorsi();
 
@@ -517,14 +516,13 @@
                     return;
                 }
 
-                await fetchBookings();
                 const chiaveSlot = getChiaveSlot(attivita, giorno, orario);
                 const attuali = getPostiOccupati(chiaveSlot);
                 if (attuali > 0) {
                     remoteData.prenotazioni[chiaveSlot] = attuali - 1;
                 }
 
-                mostraStato(`⏳ Registrazione disdetta in corso...`, '#ff0000', '#000000', '#ff0000');
+                mostraStato(`⏳ Registrazione disdetta...`, '#ff0000', '#000000', '#ff0000');
                 await saveBookings();
                 aggiornaDashboardCorsi();
 
@@ -533,14 +531,15 @@
 
                 const urlWhatsApp = `https://wa.me/${numeroCiro}?text=${encodeURIComponent(testoMessaggio)}`;
                 
-                mostraStato(`🗑️ Posto liberato! Apertura WhatsApp per la disdetta...`, '#00ff00', '#002200', '#00ff00');
+                mostraStato(`🗑️ Posto liberato! Apertura WhatsApp...`, '#00ff00', '#002200', '#00ff00');
                 
                 setTimeout(() => {
                     window.location.href = urlWhatsApp;
                 }, 800);
             });
 
-            // Avvio iniziale scaricando i dati dal cloud
+            // Avvio immediato e fluido in background
+            aggiornaDashboardCorsi();
             fetchBookings();
         });
     </script>
