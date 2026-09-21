@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prenotazione Corsi - Ciro Morra</title>
+    <title>Prenotazione Corsi MMA & BJJ - Ciro Morra</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -48,8 +48,8 @@
 <body>
     <div class="container">
         <header>
-            <h1>🏋️ Prenotazione Corsi - Ciro Morra</h1>
-            <p>Seleziona il giorno, l'orario e prenota il tuo corso inviando la conferma su WhatsApp</p>
+            <h1>🥋 Prenotazione Corsi MMA & BJJ</h1>
+            <p>Seleziona il giorno, il turno del corso di Ciro Morra e prenota su WhatsApp</p>
         </header>
 
         <div class="day-selector" id="daySelector">
@@ -67,11 +67,10 @@
                 <input type="text" id="userName" placeholder="Es. Mario Rossi" required>
             </div>
 
-            <!-- Il numero di Ciro impostato fisso come referente dei suoi corsi -->
             <input type="hidden" id="trainerPhone" value="393281814024">
 
             <div id="loadingStatus" class="loading" style="display:none;">Sincronizzazione in corso...</div>
-            <label>Fasce Orarie Disponibili (Max 6 partecipanti)</label>
+            <label>Turni e Corsi Disponibili (Max 6 partecipanti)</label>
             <div class="slots-container" id="slotsContainer"></div>
 
             <div class="actions-container">
@@ -91,8 +90,9 @@
         let selectedSlot = null;
         let remoteData = { prenotazioni: {} };
 
-        const weekdaysSlots = ["07:00 - 08:00", "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", "12:00 - 13:00", "13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00", "16:00 - 17:00", "17:00 - 18:00", "18:00 - 19:00", "19:00 - 20:00", "20:00 - 21:00"];
-        const saturdaySlots = ["07:00 - 08:00", "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", "12:00 - 13:00"];
+        // Orari specifici dei corsi di arti marziali gestiti da Ciro
+        const weekdaysSlots = ["17:00 - 18:30 (BJJ)", "18:30 - 20:00 (MMA)", "20:00 - 21:30 (Grappling)"];
+        const saturdaySlots = ["10:00 - 11:30 (BJJ Open Mat)", "11:30 - 13:00 (MMA Sparring)"];
         const MAX_CAPACITY = 6;
 
         async function fetchBookings() {
@@ -151,7 +151,7 @@
                 const card = document.createElement('div');
                 card.className = `slot-card ${isSelected ? 'selected' : ''}`;
                 card.innerHTML = `
-                    <div class="slot-time">⏰ ${slot}</div>
+                    <div class="slot-time">🥋 ${slot}</div>
                     <div class="slot-availability">Disponibili: <strong>${available > 0 ? available : 0}</strong> / ${MAX_CAPACITY}</div>
                     <button class="btn-select" onclick="selectSlot('${slot}')">${isSelected ? 'Selezionato' : 'Seleziona'}</button>
                 `;
@@ -165,13 +165,13 @@
             const name = document.getElementById('userName').value.trim();
             const phone = document.getElementById('trainerPhone').value;
             if (!name) { alert('Inserisci il tuo nome e cognome.'); return; }
-            if (!selectedSlot) { alert('Seleziona una fascia oraria.'); return; }
+            if (!selectedSlot) { alert('Seleziona un turno.'); return; }
 
             await fetchBookings();
 
             const currentBooked = getBookedCount(selectedSlot);
             if (currentBooked >= MAX_CAPACITY) {
-                alert('Spiacenti, questo orario ha raggiunto il limite massimo di 6 persone.');
+                alert('Spiacenti, questo turno ha raggiunto il limite massimo di 6 partecipanti.');
                 renderSlots();
                 return;
             }
@@ -184,7 +184,7 @@
             await saveBookings();
             document.getElementById('loadingStatus').style.display = 'none';
 
-            window.open(`https://wa.me/${phone}?text=🏋️ *PRENOTAZIONE CORSO*%0A👤 *${encodeURIComponent(name)}*%0A📅 *${currentDay}* - *${selectedSlot}*`, '_blank');
+            window.open(`https://wa.me/${phone}?text=🥋 *PRENOTAZIONE CORSO MMA/BJJ*%0A👤 *${encodeURIComponent(name)}*%0A📅 *${currentDay}* - *${selectedSlot}*`, '_blank');
 
             selectedSlot = null;
             fetchBookings();
@@ -194,7 +194,7 @@
             const name = document.getElementById('userName').value.trim();
             const phone = document.getElementById('trainerPhone').value;
             if (!name) { alert('Inserisci il tuo nome e cognome.'); return; }
-            if (!selectedSlot) { alert('Seleziona la fascia oraria da disdire.'); return; }
+            if (!selectedSlot) { alert('Seleziona il turno da disdire.'); return; }
 
             await fetchBookings();
 
@@ -208,7 +208,7 @@
             await saveBookings();
             document.getElementById('loadingStatus').style.display = 'none';
 
-            window.open(`https://wa.me/${phone}?text=❌ *DISDETTA CORSO*%0A👤 *${encodeURIComponent(name)}*%0A📅 *${currentDay}* - *${selectedSlot}*`, '_blank');
+            window.open(`https://wa.me/${phone}?text=❌ *DISDETTA CORSO MMA/BJJ*%0A👤 *${encodeURIComponent(name)}*%0A📅 *${currentDay}* - *${selectedSlot}*`, '_blank');
 
             selectedSlot = null;
             fetchBookings();
