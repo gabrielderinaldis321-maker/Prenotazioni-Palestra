@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prenotazione Sala Pesi - Palestra</title>
+    <title>Prenotazione Corsi - Ciro Morra</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -48,8 +48,8 @@
 <body>
     <div class="container">
         <header>
-            <h1>🏋️ Prenotazione Sala Pesi</h1>
-            <p>Seleziona il giorno, l'orario e gestisci la tua prenotazione su WhatsApp</p>
+            <h1>🏋️ Prenotazione Corsi - Ciro Morra</h1>
+            <p>Seleziona il giorno, l'orario e prenota il tuo corso inviando la conferma su WhatsApp</p>
         </header>
 
         <div class="day-selector" id="daySelector">
@@ -67,21 +67,16 @@
                 <input type="text" id="userName" placeholder="Es. Mario Rossi" required>
             </div>
 
-            <div class="form-group">
-                <label for="trainerPhone">Contatta referente:</label>
-                <select id="trainerPhone">
-                    <option value="393281814024">Ciro Morra (+39 328 181 4024)</option>
-                    <option value="393484743769">Anna Corato (+39 348 474 3769)</option>
-                </select>
-            </div>
+            <!-- Il numero di Ciro impostato fisso come referente dei suoi corsi -->
+            <input type="hidden" id="trainerPhone" value="393281814024">
 
             <div id="loadingStatus" class="loading" style="display:none;">Sincronizzazione in corso...</div>
-            <label>Fasce Orarie Disponibili</label>
+            <label>Fasce Orarie Disponibili (Max 6 partecipanti)</label>
             <div class="slots-container" id="slotsContainer"></div>
 
             <div class="actions-container">
-                <button class="btn-book" onclick="sendBooking()">Prenota</button>
-                <button class="btn-cancel" onclick="sendCancellation()">Disdici</button>
+                <button class="btn-book" onclick="sendBooking()">Prenota Corso</button>
+                <button class="btn-cancel" onclick="sendCancellation()">Disdici Corso</button>
             </div>
         </div>
     </div>
@@ -189,7 +184,7 @@
             await saveBookings();
             document.getElementById('loadingStatus').style.display = 'none';
 
-            window.open(`https://wa.me/${phone}?text=🏋️ *PRENOTAZIONE*%0A👤 *${encodeURIComponent(name)}*%0A📅 *${currentDay}* - *${selectedSlot}*`, '_blank');
+            window.open(`https://wa.me/${phone}?text=🏋️ *PRENOTAZIONE CORSO*%0A👤 *${encodeURIComponent(name)}*%0A📅 *${currentDay}* - *${selectedSlot}*`, '_blank');
 
             selectedSlot = null;
             fetchBookings();
@@ -213,7 +208,7 @@
             await saveBookings();
             document.getElementById('loadingStatus').style.display = 'none';
 
-            window.open(`https://wa.me/${phone}?text=❌ *DISDETTA*%0A👤 *${encodeURIComponent(name)}*%0A📅 *${currentDay}* - *${selectedSlot}*`, '_blank');
+            window.open(`https://wa.me/${phone}?text=❌ *DISDETTA CORSO*%0A👤 *${encodeURIComponent(name)}*%0A📅 *${currentDay}* - *${selectedSlot}*`, '_blank');
 
             selectedSlot = null;
             fetchBookings();
