@@ -142,6 +142,12 @@
             background-color: #000000;
             color: #ff0000;
         }
+        button:disabled {
+            background-color: #330000;
+            color: #550000;
+            border-color: #330000;
+            cursor: not-allowed;
+        }
         .status-message {
             margin-top: 15px;
             font-weight: bold;
@@ -159,11 +165,11 @@
     <div class="container">
         <h2 class="brand-title">Steel Life</h2>
         <h1>🏋️ Prenota o Disdici Corso</h1>
-        <p class="subtitle">Seleziona attività, giorno e orario (Max 6 persone per slot) - v99</p>
+        <p class="subtitle">Seleziona attività, giorno e orario (Max 6 persone per slot)</p>
 
         <div class="dashboard-corsi">
-            <div class="dashboard-title">📊 Stato Corsi di questa Settimana</div>
-            <div id="listaStatoCorsi" class="slot-grid">Caricamento corsi...</div>
+            <div class="dashboard-title">📊 Stato Corsi in Tempo Reale</div>
+            <div id="listaStatoCorsi" class="slot-grid">Caricamento stato corsi...</div>
         </div>
 
         <form id="bookingForm" onsubmit="eseguiPrenotazione(event)">
@@ -214,27 +220,20 @@
     </div>
 
     <script>
-        const BIN_ID = '6ab1a2cfffd51605320c12e';[cite: 2]
-        const MASTER_KEY = '$2a$10$STsCYyAaMcKn0BiVzSxaM.ZhYtmH058eoAaQieLBr7y.oMeOSoq8C';
+        // --- CONFIGURAZIONE GITHUB ---
+        const GITHUB_USER = 'gabrielderinaldis321-maker'; //[cite: 4]
+        const GITHUB_REPO = 'Prenotazioni-Palestra';    //[cite: 1]
+        const GITHUB_TOKEN = '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';
+        // -----------------------------
+
         let remoteData = { prenotazioni: {} };
+        let fileSha = '';
 
         const orariDisponibili = {
-            "MMA": { 
-                giorni: ["Lunedì", "Mercoledì", "Venerdì"], 
-                orari: ["18:00 - 19:00", "19:00 - 20:00", "20:00 - 21:00"] 
-            },
-            "Boxe": { 
-                giorni: ["Martedì", "Giovedì"], 
-                orari: ["18:00 - 19:00"] 
-            },
-            "Kickboxing": { 
-                giorni: ["Martedì", "Giovedì"], 
-                orari: ["19:00 - 20:00"] 
-            },
-            "BJJ": { 
-                giorni: ["Martedì", "Giovedì"], 
-                orari: ["20:00 - 21:00"] 
-            }
+            "MMA": { giorni: ["Lunedì", "Mercoledì", "Venerdì"], orari: ["18:00 - 19:00", "19:00 - 20:00", "20:00 - 21:00"] },
+            "Boxe": { giorni: ["Martedì", "Giovedì"], orari: ["18:00 - 19:00"] },
+            "Kickboxing": { giorni: ["Martedì", "Giovedì"], orari: ["19:00 - 20:00"] },
+            "BJJ": { giorni: ["Martedì", "Giovedì"], orari: ["20:00 - 21:00"] }
         };
 
         function getSettimana() {
@@ -257,10 +256,57 @@
             }
         }
 
+        async function scaricaDatiDaGitHub() {
+            try {
+                const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/prenotazioni.json`;
+                const res = await fetch(url, {
+                    headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+                });
+                if(res.ok) {
+                    const json = await res.json();
+                    fileSha = json.sha;
+                    const decodedContent = JSON.parse(atob(json.content));
+                    remoteData = decodedContent;
+                }
+            } catch(e) {
+                console.log("Errore lettura dati da GitHub", e);
+            }
+            aggiornaDashboard();
+            controllaSlot();
+        }
+
+        async function salvaDatiSuGitHub() {
+            try {
+                const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/prenotazioni.json`;
+                const contentEncoded = btoa(JSON.stringify(remoteData, null, 2));
+                
+                const res = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: "Aggiornamento prenotazioni Steel Life",
+                        content: contentEncoded,
+                        sha: fileSha
+                    })
+                });
+
+                if(res.ok) {
+                    const json = await res.json();
+                    fileSha = json.content.sha;
+                }
+            } catch(e) {
+                console.log("Errore salvataggio su GitHub", e);
+            }
+        }
+
         function aggiornaDashboard() {
             const lista = document.getElementById('listaStatoCorsi');
             if(!lista) return;
             lista.innerHTML = '';
+            
             for (const [att, dati] of Object.entries(orariDisponibili)) {
                 dati.giorni.forEach(g => {
                     dati.orari.forEach(o => {
@@ -310,37 +356,28 @@
             const att = document.getElementById('attivita').value;
             const g = document.getElementById('giorno').value;
             const o = document.getElementById('orario').value;
+            const submitBtn = document.getElementById('submitBtn');
+            const nomeInput = document.getElementById('nome');
+            const cognomeInput = document.getElementById('cognome');
+
             if(att && g && o) {
-                const posti = remoteData.prenotazioni && remoteData.prenotazioni[getChiave(att, g, o)] ? remoteData.prenotazioni[getChiave(att, g, o)] : 0;
+                const chiave = getChiave(att, g, o);
+                const posti = remoteData.prenotazioni && remoteData.prenotazioni[chiave] ? remoteData.prenotazioni[chiave] : 0;
+
                 if(posti >= 6) {
-                    mostraStato("⛔ CORSO AL COMPLETO (6/6).", "#ff0000");
+                    mostraStato("⛔ CORSO AL COMPLETO (6/6 posti esauriti).", "#ff0000");
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = "CORSO ESAURITO";
+                    nomeInput.disabled = true;
+                    cognomeInput.disabled = true;
                 } else {
                     mostraStato(`ℹ️ Posti occupati: ${posti}/6 (Disponibili: ${6 - posti})`, "#00ff00");
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "PRENOTA";
+                    nomeInput.disabled = false;
+                    cognomeInput.disabled = false;
                 }
             }
-        }
-
-        async function scaricaDati() {
-            try {
-                const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-                    headers: { 'X-Master-Key': MASTER_KEY }
-                });
-                if(res.ok) {
-                    const json = await res.json();
-                    remoteData = json.record || { prenotazioni: {} };
-                }
-            } catch(e) { console.log("Offline"); }
-            aggiornaDashboard();
-        }
-
-        async function salvaDati() {
-            try {
-                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-                    body: JSON.stringify(remoteData)
-                });
-            } catch(e) { console.log("Errore salvataggio"); }
         }
 
         async function eseguiPrenotazione(e) {
@@ -352,22 +389,27 @@
             const cognome = document.getElementById('cognome').value;
             const chiave = getChiave(att, g, o);
             
-            await scaricaDati();
+            mostraStato("⏳ Verifica disponibilità in corso...", "#ff0000");
+            await scaricaDatiDaGitHub();
+
             const posti = remoteData.prenotazioni && remoteData.prenotazioni[chiave] ? remoteData.prenotazioni[chiave] : 0;
             if(posti >= 6) {
-                mostraStato("❌ Spiacenti, corso esaurito!", "#ff0000");
+                mostraStato("❌ Spiacenti, il corso è appena esaurito!", "#ff0000");
+                controllaSlot();
                 return;
             }
             
             if(!remoteData.prenotazioni) remoteData.prenotazioni = {};
             remoteData.prenotazioni[chiave] = posti + 1;
-            mostraStato("⏳ Salvataggio in corso...", "#ff0000");
-            await salvaDati();
+
+            mostraStato("⏳ Registrazione prenotazione...", "#ff0000");
+            await salvaDatiSuGitHub();
             aggiornaDashboard();
 
             const numeroCiro = "393281814024";
             const url = `https://wa.me/${numeroCiro}?text=${encodeURIComponent(`🏋️ *Nuova Prenotazione - Steel Life*\n👤 *Nome:* ${nome} ${cognome}\n🥊 *Attività:* ${att}\n📅 *Giorno:* ${g}\n⏰ *Orario:*${o}`)}`;
-            mostraStato("✅ Apertura WhatsApp...", "#00ff00");
+            
+            mostraStato("✅ Prenotazione confermata! Apertura WhatsApp...", "#00ff00");
             setTimeout(() => { window.location.href = url; }, 800);
         }
 
@@ -377,28 +419,32 @@
             const o = document.getElementById('orario').value;
             const nome = document.getElementById('nome').value;
             const cognome = document.getElementById('cognome').value;
+
             if(!att || !g || !o || !nome || !cognome) {
                 mostraStato("⚠️ Compila tutti i campi per disdire.", "#ff0000");
                 return;
             }
+
             const chiave = getChiave(att, g, o);
-            await scaricaDati();
+            mostraStato("⏳ Aggiornamento in corso...", "#ff0000");
+            await scaricaDatiDaGitHub();
+
             const posti = remoteData.prenotazioni && remoteData.prenotazioni[chiave] ? remoteData.prenotazioni[chiave] : 0;
-            if(posti > 0) remoteData.prenotazioni[chiave] = posti - 1;
-            
-            mostraStato("⏳ Disdetta in corso...", "#ff0000");
-            await salvaDati();
+            if(posti > 0) {
+                remoteData.prenotazioni[chiave] = posti - 1;
+            }
+
+            await salvaDatiSuGitHub();
             aggiornaDashboard();
 
             const numeroCiro = "393281814024";
             const url = `https://wa.me/${numeroCiro}?text=${encodeURIComponent(`Ciao Ciro, vorrei disdire la mia prenotazione per il corso di ${att} di ${g} alle${o}. Nome: ${nome}${cognome}`)}`;
-            mostraStato("🗑️ Apertura WhatsApp...", "#00ff00");
+            
+            mostraStato("🗑️ Posto liberato! Apertura WhatsApp...", "#00ff00");
             setTimeout(() => { window.location.href = url; }, 800);
         }
 
-        // Avvio immediato
-        aggiornaDashboard();
-        scaricaDati();
+        scaricaDatiDaGitHub();
     </script>
 </body>
 </html>
