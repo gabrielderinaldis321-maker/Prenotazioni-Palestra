@@ -259,7 +259,7 @@
             </div>
         </form>
 
-        <div id="formStatus" class="status-message">Pronto per la prenotazione.</div>
+        <div id="formStatus" class="status-message">Benvenuto! Seleziona i campi per procedere.</div>
     </div>
 
     <script>
@@ -312,6 +312,35 @@
             formStatus.style.borderColor = coloreBordo;
         }
 
+        // Funzioni Cloud (JSONBin)
+        async function fetchBookings() {
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/` + BIN_ID + `/latest`, {
+                    headers: { 'X-Master-Key': MASTER_KEY }
+                });
+                const result = await response.json();
+                remoteData = result.record || { prenotazioni: {} };
+            } catch (error) {
+                console.error("Errore di caricamento dati cloud:", error);
+            }
+            aggiornaDashboardCorsi();
+        }
+
+        async function saveBookings() {
+            try {
+                await fetch(`https://api.jsonbin.io/v3/b/` + BIN_ID, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': MASTER_KEY
+                    },
+                    body: JSON.stringify(remoteData)
+                });
+            } catch (error) {
+                console.error("Errore di salvataggio dati cloud:", error);
+            }
+        }
+
         function getPostiOccupati(chiaveSlot) {
             return remoteData.prenotazioni && remoteData.prenotazioni[chiaveSlot] ? remoteData.prenotazioni[chiaveSlot] : 0;
         }
@@ -339,81 +368,17 @@
             }
         }
 
-        async function fetchBookings() {
-            try {
-                const response = await fetch(`https://api.jsonbin.io/v3/b/` + BIN_ID + `/latest`, {
-                    headers: { 'X-Master-Key': MASTER_KEY }
-                });
-                const result = await response.json();
-                remoteData = result.record || { prenotazioni: {} };
-            } catch (error) {
-                console.error("Errore di caricamento dati cloud:", error);
-            }
-            aggiornaDashboardCorsi();
-            controllaSlot();
-        }
-
-        async function saveBookings() {
-            try {
-                await fetch(`https://api.jsonbin.io/v3/b/` + BIN_ID, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': MASTER_KEY
-                    },
-                    body: JSON.stringify(remoteData)
-                });
-            } catch (error) {
-                console.error("Errore di salvataggio dati cloud:", error);
-            }
-        }
-
-        function ripristinaCampi() {
-            const nomeInput = document.getElementById('nome');
-            const cognomeInput = document.getElementById('cognome');
-            const submitBtn = document.getElementById('submitBtn');
-
-            nomeInput.disabled = false;
-            cognomeInput.disabled = false;
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'PRENOTA';
-        }
-
-        function controllaSlot() {
-            const attivita = document.getElementById('attivita').value;
-            const giorno = document.getElementById('giorno').value;
-            const orario = document.getElementById('orario').value;
-            const nomeInput = document.getElementById('nome');
-            const cognomeInput = document.getElementById('cognome');
-            const submitBtn = document.getElementById('submitBtn');
-
-            if (attivita && giorno && orario) {
-                const chiaveSlot = getChiaveSlot(attivita, giorno, orario);
-                const postiOccupati = getPostiOccupati(chiaveSlot);
-
-                if (postiOccupati >= 6) {
-                    mostraStato('⛔ SUPERAMENTO LIMITE MASSIMO: Questo corso è al completo (6/6 posti esauriti).', '#ff0000', '#220000', '#ff0000');
-                    nomeInput.disabled = true;
-                    cognomeInput.disabled = true;
-                    submitBtn.disabled = true;
-                    submitBtn.textContent = 'CORSO ESAURITO';
-                } else {
-                    const rimanenti = 6 - postiOccupati;
-                    mostraStato(`ℹ️ Posti occupati: ${postiOccupati}/6 (Disponibili: ${rimanenti})`, '#00ff00', '#002200', '#00ff00');
-                    ripristinaCampi();
-                }
-            }
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
             const attivitaSelect = document.getElementById('attivita');
             const giornoSelect = document.getElementById('giorno');
             const orarioSelect = document.getElementById('orario');
-            const bookingForm = document.getElementById('bookingForm');
+            const nomeInput = document.getElementById('nome');
+            const cognomeInput = document.getElementById('cognome');
+            const submitBtn = document.getElementById('submitBtn');
             const disdiciBtn = document.getElementById('disdiciBtn');
+            const bookingForm = document.getElementById('bookingForm');
 
-            // Gestione cambio Attività
-            attivitaSelect.addEventListener('change', () => {
+            function aggiornaGiorni() {
                 const attivita = attivitaSelect.value;
                 giornoSelect.innerHTML = '<option value="">Seleziona giorno</option>';
                 orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
@@ -428,10 +393,9 @@
                         giornoSelect.appendChild(opt);
                     });
                 }
-            });
+            }
 
-            // Gestione cambio Giorno
-            giornoSelect.addEventListener('change', () => {
+            function aggiornaOrari() {
                 const attivita = attivitaSelect.value;
                 const giorno = giornoSelect.value;
                 orarioSelect.innerHTML = '<option value="">Seleziona orario</option>';
@@ -446,27 +410,52 @@
                         orarioSelect.appendChild(opt);
                     });
                 }
-            });
+            }
 
-            // Gestione cambio Orario
+            function ripristinaCampi() {
+                nomeInput.disabled = false;
+                cognomeInput.disabled = false;
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'PRENOTA';
+            }
+
+            function controllaSlot() {
+                const attivita = attivitaSelect.value;
+                const giorno = giornoSelect.value;
+                const orario = orarioSelect.value;
+
+                if (attivita && giorno && orario) {
+                    const chiaveSlot = getChiaveSlot(attivita, giorno, orario);
+                    const postiOccupati = getPostiOccupati(chiaveSlot);
+
+                    if (postiOccupati >= 6) {
+                        mostraStato('⛔ SUPERAMENTO LIMITE MASSIMO: Questo corso è al completo (6/6 posti esauriti).', '#ff0000', '#220000', '#ff0000');
+                        nomeInput.disabled = true;
+                        cognomeInput.disabled = true;
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'CORSO ESAURITO';
+                    } else {
+                        const rimanenti = 6 - postiOccupati;
+                        mostraStato(`ℹ️ Posti occupati: ${postiOccupati}/6 (Disponibili: ${rimanenti})`, '#00ff00', '#002200', '#00ff00');
+                        ripristinaCampi();
+                    }
+                }
+            }
+
+            attivitaSelect.addEventListener('change', aggiornaGiorni);
+            giornoSelect.addEventListener('change', aggiornaOrari);
             orarioSelect.addEventListener('change', controllaSlot);
 
-            // Gestione invio Prenotazione
+            // Gestione Prenotazione
             bookingForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
                 const attivita = attivitaSelect.value;
                 const giorno = giornoSelect.value;
                 const orario = orarioSelect.value;
-                const nome = document.getElementById('nome').value;
-                const cognome = document.getElementById('cognome').value;
+                const nome = nomeInput.value;
+                const cognome = cognomeInput.value;
                 
-                if (!attivita || !giorno || !orario) {
-                    mostraStato('⚠️ Seleziona attività, giorno e orario.', '#ff0000', '#220000', '#ff0000');
-                    return;
-                }
-
-                await fetchBookings();
                 const chiaveSlot = getChiaveSlot(attivita, giorno, orario);
                 const postiOccupati = getPostiOccupati(chiaveSlot);
 
@@ -478,7 +467,7 @@
                 if (!remoteData.prenotazioni) remoteData.prenotazioni = {};
                 remoteData.prenotazioni[chiaveSlot] = postiOccupati + 1;
 
-                mostraStato(`⏳ Salvataggio in corso...`, '#ff0000', '#000000', '#ff0000');
+                mostraStato(`⏳ Salvataggio prenotazione in corso...`, '#ff0000', '#000000', '#ff0000');
                 await saveBookings();
                 aggiornaDashboardCorsi();
 
@@ -503,22 +492,21 @@
                 const attivita = attivitaSelect.value;
                 const giorno = giornoSelect.value;
                 const orario = orarioSelect.value;
-                const nome = document.getElementById('nome').value;
-                const cognome = document.getElementById('cognome').value;
+                const nome = nomeInput.value;
+                const cognome = cognomeInput.value;
 
                 if (!attivita || !giorno || !orario || !nome || !cognome) {
                     mostraStato('⚠️ Per disdire, compila Nome, Cognome, Attività, Giorno e Orario.', '#ff0000', '#220000', '#ff0000');
                     return;
                 }
 
-                await fetchBookings();
                 const chiaveSlot = getChiaveSlot(attivita, giorno, orario);
                 const attuali = getPostiOccupati(chiaveSlot);
                 if (attuali > 0) {
                     remoteData.prenotazioni[chiaveSlot] = attuali - 1;
                 }
 
-                mostraStato(`⏳ Registrazione disdetta...`, '#ff0000', '#000000', '#ff0000');
+                mostraStato(`⏳ Registrazione disdetta in corso...`, '#ff0000', '#000000', '#ff0000');
                 await saveBookings();
                 aggiornaDashboardCorsi();
 
@@ -527,15 +515,14 @@
 
                 const urlWhatsApp = `https://wa.me/${numeroCiro}?text=${encodeURIComponent(testoMessaggio)}`;
                 
-                mostraStato(`🗑️ Posto liberato! Apertura WhatsApp...`, '#00ff00', '#002200', '#00ff00');
+                mostraStato(`🗑️ Posto liberato! Apertura WhatsApp per la disdetta...`, '#00ff00', '#002200', '#00ff00');
                 
                 setTimeout(() => {
                     window.location.href = urlWhatsApp;
                 }, 800);
             });
 
-            // Caricamento iniziale immediato
-            aggiornaDashboardCorsi();
+            // Avvio immediato
             fetchBookings();
         });
     </script>
