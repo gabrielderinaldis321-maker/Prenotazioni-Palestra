@@ -159,11 +159,11 @@
     <div class="container">
         <h2 class="brand-title">Steel Life</h2>
         <h1>🏋️ Prenota o Disdici Corso</h1>
-        <p class="subtitle">Seleziona attività, giorno e orario (Max 6 persone per slot)</p>
+        <p class="subtitle">Seleziona attività, giorno e orario (Max 6 persone per slot) - v99</p>
 
         <div class="dashboard-corsi">
             <div class="dashboard-title">📊 Stato Corsi di questa Settimana</div>
-            <div id="listaStatoCorsi" class="slot-grid"></div>
+            <div id="listaStatoCorsi" class="slot-grid">Caricamento corsi...</div>
         </div>
 
         <form id="bookingForm" onsubmit="eseguiPrenotazione(event)">
@@ -218,7 +218,6 @@
         const MASTER_KEY = '$2a$10$STsCYyAaMcKn0BiVzSxaM.ZhYtmH058eoAaQieLBr7y.oMeOSoq8C';
         let remoteData = { prenotazioni: {} };
 
-        // Programmazione esatta corsi Steel Life
         const orariDisponibili = {
             "MMA": { 
                 giorni: ["Lunedì", "Mercoledì", "Venerdì"], 
@@ -397,6 +396,8 @@
             setTimeout(() => { window.location.href = url; }, 800);
         }
 
+        // Avvio immediato
+        aggiornaDashboard();
         scaricaDati();
     </script>
 </body>
