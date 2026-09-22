@@ -268,39 +268,38 @@
             }
         }
 
-        // Funzione di download con marcatore anti-cache assoluto al millisecondo
+        // 1. LETTURA DIRETTA DAL SITO (Senza API complesse, perfetta per smartphone e PC)
         async function scaricaDatiDaGitHub() {
             try {
-                const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/prenotazioni.json?t=${Date.now()}`;
+                const url = `./prenotazioni.json?t=${Date.now()}`;
                 const res = await fetch(url, {
-                    headers: { 
-                        'Authorization': `token ${GITHUB_TOKEN}`,
-                        'Cache-Control': 'no-cache, no-store, must-revalidate'
-                    }
+                    cache: 'no-store'
                 });
+                
                 if(res.ok) {
-                    const json = await res.json();
-                    fileSha = json.sha;
-                    remoteData = JSON.parse(atob(json.content));
+                    remoteData = await res.json();
+                } else {
+                    remoteData = { settimanaCorrente: getSettimana(), prenotazioni: {} };
                 }
             } catch(e) {
-                console.log("Errore lettura dati da GitHub", e);
+                console.log("Errore lettura dati", e);
+                remoteData = { settimanaCorrente: getSettimana(), prenotazioni: {} };
             }
 
             const settimanaAttuale = getSettimana();
             if(!remoteData.settimanaCorrente || remoteData.settimanaCorrente !== settimanaAttuale) {
                 remoteData.settimanaCorrente = settimanaAttuale;
                 remoteData.prenotazioni = {};
-                await salvaDatiSuGitHub();
             }
 
             aggiornaDashboard();
             controllaSlot();
         }
 
-        // Funzione di salvataggio sicura con riallineamento dello SHA in tempo reale
+        // 2. SCRITTURA USANDO LE API DI GITHUB (Solo quando si prenota o disdice)
         async function salvaDatiSuGitHub() {
             try {
+                // Prende l'ultimo SHA aggiornato prima di scrivere per evitare conflitti
                 const urlGet = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/prenotazioni.json?t=${Date.now()}`;
                 const resGet = await fetch(urlGet, {
                     headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Cache-Control': 'no-cache' }
@@ -400,8 +399,6 @@
             const g = document.getElementById('giorno').value;
             const o = document.getElementById('orario').value;
             const submitBtn = document.getElementById('submitBtn');
-            const nomeInput = document.getElementById('nome');
-            const cognomeInput = document.getElementById('cognome');
 
             if(att && g && o) {
                 const chiave = getChiave(att, g, o);
