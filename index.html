@@ -295,7 +295,7 @@
             controllaSlot();
         }
 
-        // 2. SCRITTURA CORRETTA SU GITHUB (Gestione SHA stabilizzata)
+        // 2. SCRITTURA SU GITHUB CON LOG DI DEBUG ESTESI
         async function salvaDatiSuGitHub() {
             try {
                 const urlGet = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/prenotazioni.json?t=${Date.now()}`;
@@ -310,6 +310,8 @@
                 if(resGet.ok) {
                     const jsonGet = await resGet.json();
                     fileSha = jsonGet.sha;
+                } else {
+                    console.error("Errore GET SHA da GitHub:", resGet.status, await resGet.text());
                 }
 
                 const urlPut = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/prenotazioni.json`;
@@ -334,13 +336,13 @@
                     if(json.content && json.content.sha) {
                         fileSha = json.content.sha;
                     }
-                    console.log("Salvato con successo su GitHub!");
+                    console.log("SUCCESSO! Dati salvati su GitHub.");
                 } else {
                     const errJson = await res.json();
-                    console.error("Errore da GitHub durante il PUT:", errJson.message);
+                    console.error("ERRORE PUT GITHUB:", errJson.message);
                 }
             } catch(e) {
-                console.log("Errore di rete nel salvataggio su GitHub", e);
+                console.log("Errore di rete critico nel salvataggio:", e);
             }
         }
 
