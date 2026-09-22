@@ -256,15 +256,14 @@
 
         async function scaricaDatiDaGitHub() {
             try {
-                const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/prenotazioni.json`;
+                const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/prenotazioni.json?t=${new Date().getTime()}`;
                 const res = await fetch(url, {
-                    headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+                    headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Cache-Control': 'no-cache' }
                 });
                 if(res.ok) {
                     const json = await res.json();
                     fileSha = json.sha;
-                    const decodedContent = JSON.parse(atob(json.content));
-                    remoteData = decodedContent;
+                    remoteData = JSON.parse(atob(json.content));
                 }
             } catch(e) {
                 console.log("Errore lettura dati da GitHub", e);
@@ -283,10 +282,31 @@
 
         async function salvaDatiSuGitHub() {
             try {
-                const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/prenotazioni.json`;
+                // Rileggiamo l'ultimo SHA un istante prima di scrivere per evitare conflitti
+                const urlGet = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/prenotazioni.json?t=${new Date().getTime()}`;
+                const resGet = await fetch(urlGet, {
+                    headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Cache-Control': 'no-cache' }
+                });
+                if(resGet.ok) {
+                    const jsonGet = await resGet.json();
+                    fileSha = jsonGet.sha;
+                    const serverData = JSON.parse(atob(jsonGet.content));
+                    
+                    // Uniamo i dati attuali con quelli freschi del server per sicurezza
+                    if(serverData.prenotazioni) {
+                        for(let chiave in remoteData.prenotazioni) {
+                            if(!serverData.prenotazioni[chiave] || serverData.prenotazioni[chiave] < remoteData.prenotazioni[chiave]) {
+                                serverData.prenotazioni[chiave] = remoteData.prenotazioni[chiave];
+                            }
+                        }
+                        remoteData.prenotazioni = serverData.prenotazioni;
+                    }
+                }
+
+                const urlPut = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/prenotazioni.json`;
                 const contentEncoded = btoa(JSON.stringify(remoteData, null, 2));
                 
-                const res = await fetch(url, {
+                const res = await fetch(urlPut, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `token ${GITHUB_TOKEN}`,
