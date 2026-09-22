@@ -176,12 +176,12 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label for="nome">Nome</label>
-                    <input type="text" id="nome" name="nome" placeholder="Inserisci il nome" required>
+                    <input type="text" id="nome" name="nome" placeholder="Inserisci il nome" required oninput="salvaMemoriaUtente()">
                 </div>
 
                 <div class="form-group">
                     <label for="cognome">Cognome</label>
-                    <input type="text" id="cognome" name="cognome" placeholder="Inserisci il cognome" required>
+                    <input type="text" id="cognome" name="cognome" placeholder="Inserisci il cognome" required oninput="salvaMemoriaUtente()">
                 </div>
 
                 <div class="form-group">
@@ -234,6 +234,20 @@
             "BJJ": { giorni: ["Martedì", "Giovedì"], orari: ["20:00 - 21:00"] }
         };
 
+        // Carica nome e cognome salvati in precedenza dal browser
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedNome = localStorage.getItem('steel_life_nome');
+            const savedCognome = localStorage.getItem('steel_life_cognome');
+            if (savedNome) document.getElementById('nome').value = savedNome;
+            if (savedCognome) document.getElementById('cognome').value = savedCognome;
+            scaricaDatiDaGitHub();
+        });
+
+        function salvaMemoriaUtente() {
+            localStorage.setItem('steel_life_nome', document.getElementById('nome').value);
+            localStorage.setItem('steel_life_cognome', document.getElementById('cognome').value);
+        }
+
         function getSettimana() {
             const d = new Date();
             d.setHours(0, 0, 0, 0);
@@ -254,11 +268,15 @@
             }
         }
 
+        // Funzione di download con marcatore anti-cache assoluto al millisecondo
         async function scaricaDatiDaGitHub() {
             try {
-                const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/prenotazioni.json?t=${new Date().getTime()}`;
+                const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/prenotazioni.json?t=${Date.now()}`;
                 const res = await fetch(url, {
-                    headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Cache-Control': 'no-cache' }
+                    headers: { 
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Cache-Control': 'no-cache, no-store, must-revalidate'
+                    }
                 });
                 if(res.ok) {
                     const json = await res.json();
@@ -280,10 +298,10 @@
             controllaSlot();
         }
 
+        // Funzione di salvataggio sicura con riallineamento dello SHA in tempo reale
         async function salvaDatiSuGitHub() {
             try {
-                // Rileggiamo l'ultimo SHA un istante prima di scrivere per evitare conflitti
-                const urlGet = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/prenotazioni.json?t=${new Date().getTime()}`;
+                const urlGet = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/prenotazioni.json?t=${Date.now()}`;
                 const resGet = await fetch(urlGet, {
                     headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Cache-Control': 'no-cache' }
                 });
@@ -292,7 +310,6 @@
                     fileSha = jsonGet.sha;
                     const serverData = JSON.parse(atob(jsonGet.content));
                     
-                    // Uniamo i dati attuali con quelli freschi del server per sicurezza
                     if(serverData.prenotazioni) {
                         for(let chiave in remoteData.prenotazioni) {
                             if(!serverData.prenotazioni[chiave] || serverData.prenotazioni[chiave] < remoteData.prenotazioni[chiave]) {
@@ -394,20 +411,20 @@
                     mostraStato("⛔ CORSO AL COMPLETO (6/6 posti esauriti).", "#ff0000");
                     submitBtn.disabled = true;
                     submitBtn.textContent = "CORSO ESAURITO";
-                    nomeInput.disabled = true;
-                    cognomeInput.disabled = true;
                 } else {
                     mostraStato(`ℹ️ Posti occupati: ${posti}/6 (Disponibili: ${6 - posti})`, "#00ff00");
                     submitBtn.disabled = false;
                     submitBtn.textContent = "PRENOTA";
-                    nomeInput.disabled = false;
-                    cognomeInput.disabled = false;
                 }
             }
         }
 
         async function eseguiPrenotazione(e) {
             e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = "ATTENDI...";
+
             const att = document.getElementById('attivita').value;
             const g = document.getElementById('giorno').value;
             const o = document.getElementById('orario').value;
@@ -421,6 +438,8 @@
             const posti = remoteData.prenotazioni && remoteData.prenotazioni[chiave] ? remoteData.prenotazioni[chiave] : 0;
             if(posti >= 6) {
                 mostraStato("❌ Spiacenti, il corso è appena esaurito!", "#ff0000");
+                submitBtn.disabled = false;
+                submitBtn.textContent = "CORSO ESAURITO";
                 controllaSlot();
                 return;
             }
@@ -436,10 +455,18 @@
             const url = `https://wa.me/${numeroCiro}?text=${encodeURIComponent(`🏋️ *Nuova Prenotazione - Steel Life*\n👤 *Nome:* ${nome} ${cognome}\n🥊 *Attività:* ${att}\n📅 *Giorno:* ${g}\n⏰ *Orario:*${o}`)}`;
             
             mostraStato("✅ Prenotazione confermata! Apertura WhatsApp...", "#00ff00");
-            setTimeout(() => { window.location.href = url; }, 800);
+            setTimeout(() => { 
+                window.location.href = url; 
+                submitBtn.disabled = false;
+                submitBtn.textContent = "PRENOTA";
+            }, 800);
         }
 
         async function eseguiDisdetta() {
+            const disdiciBtn = document.getElementById('disdiciBtn');
+            disdiciBtn.disabled = true;
+            disdiciBtn.textContent = "ATTENDI...";
+
             const att = document.getElementById('attivita').value;
             const g = document.getElementById('giorno').value;
             const o = document.getElementById('orario').value;
@@ -448,6 +475,8 @@
 
             if(!att || !g || !o || !nome || !cognome) {
                 mostraStato("⚠️ Compila tutti i campi per disdire.", "#ff0000");
+                disdiciBtn.disabled = false;
+                disdiciBtn.textContent = "DISDICI";
                 return;
             }
 
@@ -467,10 +496,12 @@
             const url = `https://wa.me/${numeroCiro}?text=${encodeURIComponent(`Ciao Ciro, vorrei disdire la mia prenotazione per il corso di ${att} di ${g} alle${o}. Nome: ${nome}${cognome}`)}`;
             
             mostraStato("🗑️ Posto liberato! Apertura WhatsApp...", "#00ff00");
-            setTimeout(() => { window.location.href = url; }, 800);
+            setTimeout(() => { 
+                window.location.href = url; 
+                disdiciBtn.disabled = false;
+                disdiciBtn.textContent = "DISDICI";
+            }, 800);
         }
-
-        scaricaDatiDaGitHub();
     </script>
 </body>
 </html>
